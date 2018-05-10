@@ -15,6 +15,13 @@ use Ratchet\MessageComponentInterface;
 class Chat implements MessageComponentInterface
 {
 
+    protected $clients;
+
+    public function __construct()
+    {
+        $this->clients = new \SplObjectStorage();
+    }
+
     /**
      * When a new connection is opened it will be passed to this method
      * @param  ConnectionInterface $conn The socket/connection that just connected to your application
@@ -22,7 +29,9 @@ class Chat implements MessageComponentInterface
      */
     function onOpen(ConnectionInterface $conn)
     {
-        // TODO: Implement onOpen() method.
+        // Store the new connection to send messages to later
+        $this->clients->attach($conn);
+        echo "New connection! ({$conn->resourceId})\n";
     }
 
     /**
@@ -32,7 +41,9 @@ class Chat implements MessageComponentInterface
      */
     function onClose(ConnectionInterface $conn)
     {
-        // TODO: Implement onClose() method.
+        // The connection is closed, remove it, as w can no longer send it messages
+        $this->clients->detach($conn);
+        echo "Connection {$conn->resourceId} has disconnected\n";
     }
 
     /**
@@ -44,7 +55,8 @@ class Chat implements MessageComponentInterface
      */
     function onError(ConnectionInterface $conn, \Exception $e)
     {
-        // TODO: Implement onError() method.
+        echo "An error has occured: {$e->getMessage()}\n";
+        $conn->close();
     }
 
     /**
@@ -55,6 +67,18 @@ class Chat implements MessageComponentInterface
      */
     function onMessage(ConnectionInterface $from, $msg)
     {
-        // TODO: Implement onMessage() method.
+        $numReceiver = count($this->clients) - 1;
+        echo sprintf(
+            'Connection %d sending message "%s" to %d other connection%s . "\n"',
+            $from->resourceId, $msg, $numReceiver, $numReceiver == 1 ? '': 's'
+        );
+
+        foreach ($this->clients as $client) {
+            if ($from !== $client) {
+                // The sender is not the receiver, send to each client connected
+                $client->send($msg);
+            }
+        }
+
     }
 }
