@@ -3,23 +3,38 @@
  * Created by PhpStorm.
  * User: NIKITA
  * Date: 10.05.2018
- * Time: 14:37
+ * Time: 19:53
  */
 
 namespace MyApp;
 
-
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 
-class Chat implements MessageComponentInterface
+class Game implements MessageComponentInterface
 {
+    /**
+     * @var array
+     */
+    protected $stack = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight'];
+
+    protected $players;
 
     protected $clients;
 
     public function __construct()
     {
+        $this->mixStack();
+        $this->players = new \SplObjectStorage();
         $this->clients = new \SplObjectStorage();
+    }
+
+    public function start()
+    {
+        foreach ($this->players as $player) {
+            $player->setCards(array_splice($this->stack, 0, 4));
+            $player->getClient()->send(json_encode($player->getCards()));
+        }
     }
 
     /**
@@ -31,6 +46,12 @@ class Chat implements MessageComponentInterface
     {
         // Store the new connection to send messages to later
         $this->clients->attach($conn);
+        $this->players->attach(new Player($conn));
+        echo $this->players->count() . "\n";
+        if ($this->players->count() == 2) {
+            echo "Game starts! \n";
+            $this->start();
+        }
         echo "New connection! ({$conn->resourceId})\n";
     }
 
@@ -81,4 +102,26 @@ class Chat implements MessageComponentInterface
         }
 
     }
+
+    public function mixStack()
+    {
+        shuffle($this->stack);
+    }
+
+    /**
+     * @return array
+     */
+    public function getStack(): array
+    {
+        return $this->stack;
+    }
+
+    /**
+     * @param array $stack
+     */
+    public function setStack(array $stack)
+    {
+        $this->stack = $stack;
+    }
+
 }
