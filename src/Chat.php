@@ -69,7 +69,7 @@ class Chat implements MessageComponentInterface
     {
         $numReceiver = count($this->clients) - 1;
         echo sprintf(
-            'Connection %d sending message "%s" to %d other connection%s . "\n"',
+            'Connection %d sending message "%s" to %d other connection%s' . "\n",
             $from->resourceId, $msg, $numReceiver, $numReceiver == 1 ? '': 's'
         );
 
