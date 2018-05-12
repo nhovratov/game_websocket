@@ -22,9 +22,7 @@ class Game implements MessageComponentInterface
 
     protected $clients;
 
-    protected $globalState = [
-        'connections' => 0
-    ];
+    protected $globalState;
 
     public function __construct()
     {
@@ -106,6 +104,16 @@ class Game implements MessageComponentInterface
     protected function updateGlobalState()
     {
         $this->globalState['connections'] = $this->players->count();
+        $this->globalState['players'] = $this->getPlayers();
+    }
+
+    protected function getPlayers()
+    {
+        $players = [];
+        foreach ($this->players as $player) {
+            $players[] = ["id" => $player->getId()];
+        }
+        return $players;
     }
 
     protected function alertAll()
@@ -113,7 +121,7 @@ class Game implements MessageComponentInterface
         foreach ($this->players as $player) {
             $msg = [
                 'global' => $this->globalState,
-                'local' => $player->getCards()
+                'local' => $player->getState()
             ];
             $player->getClient()->send(json_encode($msg));
         }

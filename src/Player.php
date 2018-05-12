@@ -20,6 +20,15 @@ class Player
     public function __construct($client)
     {
         $this->client = $client;
+        $this->id = $client->resourceId;
+    }
+
+    public function getState()
+    {
+        return [
+          "id" => $this->id,
+          "cards" => $this->cards
+        ];
     }
 
     /**
