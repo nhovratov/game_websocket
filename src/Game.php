@@ -8,6 +8,7 @@
 
 namespace MyApp;
 
+use MyApp\LoveLetter\LoveLetter;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 

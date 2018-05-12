@@ -6,8 +6,9 @@
  * Time: 21:35
  */
 
-namespace MyApp;
+namespace MyApp\LoveLetter;
 
+use MyApp\GameInterface;
 
 class LoveLetter implements GameInterface
 {
