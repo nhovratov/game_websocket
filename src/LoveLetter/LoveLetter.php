@@ -73,9 +73,13 @@ class LoveLetter implements GameInterface
 
     protected $players;
 
-    protected $state = [];
+    protected $gameStarted = false;
 
     protected $stack = [];
+
+    protected $reserve = [];
+
+    protected $outOfGameCards = [];
 
     public function __construct()
     {
@@ -85,11 +89,17 @@ class LoveLetter implements GameInterface
     public function start($players)
     {
         $this->players = $players;
-        $this->state['gameStarted'] = true;
+        $this->gameStarted = true;
         foreach ($this->players as $player) {
             $currentState = $player->getGameState();
-            $currentState['cards'] = [$this->drawCard()->toArray()];
+            $currentState['cards'] = $this->convertObjectArrayToAssocArray([$this->drawCard()]);
             $player->setGameState($currentState);
+        }
+        $this->reserve[] = $this->drawCard();
+        if ($this->players->count() === 2) {
+            for ($i = 0; $i < 3; $i++) {
+                $this->outOfGameCards[] = $this->drawCard();
+            }
         }
         $this->updateState();
     }
@@ -99,7 +109,7 @@ class LoveLetter implements GameInterface
         foreach ($this->players as $player) {
             $msg = [
                 'dataType' => 'game',
-                'global' => $this->state,
+                'global' => $this->getGlobalState(),
                 'local' => $player->getGameState()
             ];
             $player->getClient()->send(json_encode($msg));
@@ -121,20 +131,21 @@ class LoveLetter implements GameInterface
         return array_pop($this->stack);
     }
 
-    /**
-     * @return mixed
-     */
-    public function getState()
+    public function getGlobalState()
     {
-        return $this->state;
+        return [
+            'gameStarted' => $this->gameStarted,
+            'outOfGameCards' => $this->convertObjectArrayToAssocArray($this->outOfGameCards)
+        ];
     }
 
-    /**
-     * @param mixed $state
-     */
-    public function setState($state)
+    protected function convertObjectArrayToAssocArray($objArray)
     {
-        $this->state = $state;
+        $assocArray = [];
+        foreach ($objArray as $element) {
+            $assocArray[] = $element->toArray();
+        }
+        return $assocArray;
     }
 
     /**
