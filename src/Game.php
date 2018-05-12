@@ -22,19 +22,15 @@ class Game implements MessageComponentInterface
 
     protected $clients;
 
+    protected $globalState = [
+        'connections' => 0
+    ];
+
     public function __construct()
     {
         $this->mixStack();
         $this->players = new \SplObjectStorage();
         $this->clients = new \SplObjectStorage();
-    }
-
-    public function start()
-    {
-        foreach ($this->players as $player) {
-            $player->setCards(array_splice($this->stack, 0, 4));
-            $player->getClient()->send(json_encode($player->getCards()));
-        }
     }
 
     /**
@@ -47,11 +43,8 @@ class Game implements MessageComponentInterface
         // Store the new connection to send messages to later
         $this->clients->attach($conn);
         $this->players->attach(new Player($conn));
-        echo $this->players->count() . "\n";
-        if ($this->players->count() == 2) {
-            echo "Game starts! \n";
-            $this->start();
-        }
+        $this->updateGlobalState();
+        $this->alertAll();
         echo "New connection! ({$conn->resourceId})\n";
     }
 
@@ -64,6 +57,14 @@ class Game implements MessageComponentInterface
     {
         // The connection is closed, remove it, as w can no longer send it messages
         $this->clients->detach($conn);
+        foreach ($this->players as $player) {
+            if ($player->getClient()->resourceId === $conn->resourceId) {
+                $this->players->detach($player);
+                break;
+            }
+        }
+        $this->updateGlobalState();
+        $this->alertAll();
         echo "Connection {$conn->resourceId} has disconnected\n";
     }
 
@@ -91,7 +92,7 @@ class Game implements MessageComponentInterface
         $numReceiver = count($this->clients) - 1;
         echo sprintf(
             'Connection %d sending message "%s" to %d other connection%s' . "\n",
-            $from->resourceId, $msg, $numReceiver, $numReceiver == 1 ? '': 's'
+            $from->resourceId, $msg, $numReceiver, $numReceiver == 1 ? '' : 's'
         );
 
         foreach ($this->clients as $client) {
@@ -100,7 +101,22 @@ class Game implements MessageComponentInterface
                 $client->send($msg);
             }
         }
+    }
 
+    protected function updateGlobalState()
+    {
+        $this->globalState['connections'] = $this->players->count();
+    }
+
+    protected function alertAll()
+    {
+        foreach ($this->players as $player) {
+            $msg = [
+                'global' => $this->globalState,
+                'local' => $player->getCards()
+            ];
+            $player->getClient()->send(json_encode($msg));
+        }
     }
 
     public function mixStack()
