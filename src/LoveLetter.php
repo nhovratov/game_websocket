@@ -13,7 +13,7 @@ class LoveLetter implements GameInterface
 {
     protected $players;
 
-    protected $state;
+    protected $state = [];
 
     public function start($players)
     {
@@ -32,5 +32,21 @@ class LoveLetter implements GameInterface
             ];
             $player->getClient()->send(json_encode($msg));
         }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getState()
+    {
+        return $this->state;
+    }
+
+    /**
+     * @param mixed $state
+     */
+    public function setState($state)
+    {
+        $this->state = $state;
     }
 }
