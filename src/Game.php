@@ -92,6 +92,11 @@ class Game implements MessageComponentInterface
             $this->handlePlayer($from, $msg['id']);
         }
 
+        if (isset($msg['name'])) {
+            $player = $this->getPlayerById($msg['id']);
+            $player->setName($msg['name']);
+        }
+
         if (isset($msg['action'])) {
             switch ($msg['action']) {
                 case 'start':
@@ -157,6 +162,7 @@ class Game implements MessageComponentInterface
         foreach ($this->players as $player) {
             $players[] = [
                 "id" => $player->getId(),
+                "name" => $player->getName(),
                 "connected" => (bool)$player->getClient()
             ];
         }
