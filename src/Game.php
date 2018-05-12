@@ -34,7 +34,11 @@ class Game implements MessageComponentInterface
     {
         // Store the new connection to send messages to later
         $this->clients->attach($conn);
-        $this->update();
+        $conn->send(json_encode([
+            'local' => [
+                'id' => $conn->resourceId
+            ]
+        ]));
         echo "New connection! ({$conn->resourceId})\n";
     }
 
@@ -79,19 +83,24 @@ class Game implements MessageComponentInterface
     function onMessage(ConnectionInterface $from, $msg)
     {
         $msg = json_decode($msg, true);
-        if (!$this->playerExists($msg["id"])) {
-            $player = new Player($from, $msg["id"]);
+        $this->handlePlayer($from, $msg['id']);
+        $this->update();
+    }
+
+    protected function handlePlayer($conn, $id)
+    {
+        if (!$this->playerExists($id)) {
+            $player = new Player($conn, $id);
             $this->players->attach($player);
             if ($this->players->count() === 1) {
                 $this->globalState['hostid'] = $player->getId();
             }
             echo "Create new player\n";
-        } elseif (!$this->getPlayerById($msg["id"])->getClient()) {
+        } elseif (!$this->getPlayerById($id)->getClient()) {
             echo "Recover player\n";
-            $player = $this->getPlayerById($msg["id"]);
-            $player->setClient($from);
+            $player = $this->getPlayerById($id);
+            $player->setClient($conn);
         }
-        $this->update();
     }
 
     protected function update()
