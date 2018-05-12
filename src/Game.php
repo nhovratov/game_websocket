@@ -13,11 +13,6 @@ use Ratchet\MessageComponentInterface;
 
 class Game implements MessageComponentInterface
 {
-    /**
-     * @var array
-     */
-    protected $stack = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight'];
-
     protected $players;
 
     protected $clients;
@@ -26,7 +21,6 @@ class Game implements MessageComponentInterface
 
     public function __construct()
     {
-        $this->mixStack();
         $this->players = new \SplObjectStorage();
         $this->clients = new \SplObjectStorage();
     }
@@ -155,27 +149,6 @@ class Game implements MessageComponentInterface
             ];
             $player->getClient()->send(json_encode($msg));
         }
-    }
-
-    public function mixStack()
-    {
-        shuffle($this->stack);
-    }
-
-    /**
-     * @return array
-     */
-    public function getStack(): array
-    {
-        return $this->stack;
-    }
-
-    /**
-     * @param array $stack
-     */
-    public function setStack(array $stack)
-    {
-        $this->stack = $stack;
     }
 
 }

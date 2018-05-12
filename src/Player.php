@@ -15,8 +15,6 @@ class Player
 
     protected $id;
 
-    protected $cards = [];
-
     public function __construct($client, $id)
     {
         $this->client = $client;
@@ -26,8 +24,7 @@ class Player
     public function getState()
     {
         return [
-            "id" => $this->id,
-            "cards" => $this->cards
+            "id" => $this->id
         ];
     }
 
@@ -37,22 +34,6 @@ class Player
     public function getId()
     {
         return $this->id;
-    }
-
-    /**
-     * @return array
-     */
-    public function getCards(): array
-    {
-        return $this->cards;
-    }
-
-    /**
-     * @param array $cards
-     */
-    public function setCards(array $cards)
-    {
-        $this->cards = $cards;
     }
 
     /**
