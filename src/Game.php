@@ -128,7 +128,6 @@ class Game implements MessageComponentInterface
 
     protected function updateGlobalState()
     {
-        $this->globalState['connections'] = $this->players->count();
         $this->globalState['players'] = $this->getPlayers();
     }
 
@@ -136,7 +135,10 @@ class Game implements MessageComponentInterface
     {
         $players = [];
         foreach ($this->players as $player) {
-            $players[] = ["id" => $player->getId()];
+            $players[] = [
+                "id" => $player->getId(),
+                "connected" => (bool)$player->getClient()
+            ];
         }
         return $players;
     }
