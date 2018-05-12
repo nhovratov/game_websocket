@@ -17,12 +17,15 @@ class Game implements MessageComponentInterface
 
     protected $clients;
 
-    protected $globalState;
+    protected $globalState = [];
+
+    protected $game;
 
     public function __construct()
     {
         $this->players = new \SplObjectStorage();
         $this->clients = new \SplObjectStorage();
+        $this->game = new LoveLetter();
     }
 
     /**
@@ -35,6 +38,7 @@ class Game implements MessageComponentInterface
         // Store the new connection to send messages to later
         $this->clients->attach($conn);
         $conn->send(json_encode([
+            'global' => $this->globalState,
             'local' => [
                 'id' => $conn->resourceId
             ]
@@ -83,7 +87,20 @@ class Game implements MessageComponentInterface
     function onMessage(ConnectionInterface $from, $msg)
     {
         $msg = json_decode($msg, true);
-        $this->handlePlayer($from, $msg['id']);
+        if (isset($msg['id'])) {
+            $this->handlePlayer($from, $msg['id']);
+        }
+
+        if (isset($msg['action'])) {
+            echo $msg['action'];
+            switch ($msg['action']) {
+                case 'start':
+                    $this->game->start($this->players);
+                    break;
+                default:
+            }
+        }
+
         $this->update();
     }
 
