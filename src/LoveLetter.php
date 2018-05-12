@@ -9,13 +9,28 @@
 namespace MyApp;
 
 
-class LoveLetter
+class LoveLetter implements GameInterface
 {
     protected $players;
+
+    protected $state;
 
     public function start($players)
     {
         $this->players = $players;
-        // Start things up
+        $this->state['gameStarted'] = true;
+        $this->updateState();
+    }
+
+    public function updateState()
+    {
+        foreach ($this->players as $player) {
+            $msg = [
+                'dataType' => 'game',
+                'global' => $this->state,
+                'local' => $player->getGameState()
+            ];
+            $player->getClient()->send(json_encode($msg));
+        }
     }
 }

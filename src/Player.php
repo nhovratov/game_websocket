@@ -15,6 +15,8 @@ class Player
 
     protected $id;
 
+    protected $gameState;
+
     public function __construct($client, $id)
     {
         $this->client = $client;
@@ -26,6 +28,19 @@ class Player
         return [
             "id" => $this->id
         ];
+    }
+
+    public function getGameState()
+    {
+        return $this->gameState;
+    }
+
+    /**
+     * @param mixed $gameState
+     */
+    public function setGameState($gameState)
+    {
+        $this->gameState = $gameState;
     }
 
     /**
@@ -56,4 +71,5 @@ class Player
     {
         $this->client = $client;
     }
+
 }

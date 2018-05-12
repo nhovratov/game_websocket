@@ -92,7 +92,6 @@ class Game implements MessageComponentInterface
         }
 
         if (isset($msg['action'])) {
-            echo $msg['action'];
             switch ($msg['action']) {
                 case 'start':
                     $this->game->start($this->players);
