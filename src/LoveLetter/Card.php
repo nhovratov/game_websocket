@@ -50,4 +50,13 @@ class Card
         return $this->effect;
     }
 
+    public function toArray()
+    {
+        return [
+            'name' => $this->name,
+            'value' => $this->value,
+            'effect' => $this->effect
+        ];
+    }
+
 }

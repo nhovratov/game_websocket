@@ -86,6 +86,11 @@ class LoveLetter implements GameInterface
     {
         $this->players = $players;
         $this->state['gameStarted'] = true;
+        foreach ($this->players as $player) {
+            $currentState = $player->getGameState();
+            $currentState['cards'] = [$this->drawCard()->toArray()];
+            $player->setGameState($currentState);
+        }
         $this->updateState();
     }
 
@@ -109,6 +114,11 @@ class LoveLetter implements GameInterface
             }
         }
         shuffle($this->stack);
+    }
+
+    protected function drawCard()
+    {
+        return array_pop($this->stack);
     }
 
     /**
