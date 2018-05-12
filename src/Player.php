@@ -17,17 +17,17 @@ class Player
 
     protected $cards = [];
 
-    public function __construct($client)
+    public function __construct($client, $id)
     {
         $this->client = $client;
-        $this->id = $client->resourceId;
+        $this->id = $id;
     }
 
     public function getState()
     {
         return [
-          "id" => $this->id,
-          "cards" => $this->cards
+            "id" => $this->id,
+            "cards" => $this->cards
         ];
     }
 
@@ -61,5 +61,18 @@ class Player
     public function getClient()
     {
         return $this->client;
+    }
+
+    public function removeClient()
+    {
+        $this->client = null;
+    }
+
+    /**
+     * @param mixed $client
+     */
+    public function setClient($client)
+    {
+        $this->client = $client;
     }
 }
