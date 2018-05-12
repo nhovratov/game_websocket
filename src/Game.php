@@ -88,6 +88,9 @@ class Game implements MessageComponentInterface
         if (!$this->playerExists($msg["id"])) {
             $player = new Player($from, $msg["id"]);
             $this->players->attach($player);
+            if ($this->players->count() === 1) {
+                $this->globalState['hostid'] = $player->getId();
+            }
             echo "Create new player\n";
         } elseif (!$this->getPlayerById($msg["id"])->getClient()) {
             echo "Recover player\n";
