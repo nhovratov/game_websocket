@@ -80,11 +80,15 @@ class LoveLetter implements GameInterface
 
     protected $reserve = [];
 
+    protected $openCards = [];
+
     protected $outOfGameCards = [];
 
     protected $firstPlayerSelected = false;
 
     protected $playerTurn;
+
+    protected $waitingForPlayer = false;
 
     protected $status = '';
 
@@ -119,6 +123,8 @@ class LoveLetter implements GameInterface
             case 'selectFirstPlayer':
                 $this->selectFirstPlayer($params['id']);
                 break;
+            case 'chooseCard':
+                $this->playerChoosesCard($params);
             default:
         }
     }
@@ -175,15 +181,32 @@ class LoveLetter implements GameInterface
         $this->firstPlayerSelected = true;
         $this->status = 'Erster Spieler ' . $player->getName() . ' ist dran...';
         $this->drawCardForActivePlayer();
+        $this->waitingForPlayer = true;
+        $this->updateState();
+    }
+
+    protected function playerChoosesCard($params)
+    {
+        $index = $params['index'];
+        $player = $this->getActivePlayer();
+        $state =  $player->getGameState();
+        $this->openCards = array_splice($state['cards'], $index, 1);
+        $player->setGameState($state);
+        $this->waitingForPlayer = false;
         $this->updateState();
     }
 
     protected function drawCardForActivePlayer()
     {
-        $player = $this->getPlayerById($this->playerTurn);
+        $player = $this->getActivePlayer();
         $state = $player->getGameState();
         $state['cards'][] = $this->drawCard();
         $player->setGameState($state);
+    }
+
+    protected function getActivePlayer()
+    {
+        return $this->getPlayerById($this->playerTurn);
     }
 
     public function getGlobalState()
@@ -192,7 +215,9 @@ class LoveLetter implements GameInterface
             'gameStarted' => $this->gameStarted,
             'firstPlayerSelected' => $this->firstPlayerSelected,
             'playerTurn' => $this->playerTurn,
+            'waitingForPlayer' => $this->waitingForPlayer,
             'outOfGameCards' => $this->outOfGameCards,
+            'openCards' => $this->openCards,
             'status' => $this->status
         ];
         return $msg;
