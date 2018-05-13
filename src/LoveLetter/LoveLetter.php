@@ -86,6 +86,9 @@ class LoveLetter implements GameInterface
 
     protected $firstPlayerSelected = false;
 
+    /**
+     * @var int
+     */
     protected $playerTurn;
 
     protected $waitingForPlayer = false;
@@ -179,7 +182,7 @@ class LoveLetter implements GameInterface
         $player = $this->getPlayerById($id);
         $this->playerTurn = $id;
         $this->firstPlayerSelected = true;
-        $this->status = 'Erster Spieler ' . $player->getName() . ' ist dran...';
+        $this->status = $player->getName() . ' ist dran...';
         $this->drawCardForActivePlayer();
         $this->waitingForPlayer = true;
         $this->updateState();
