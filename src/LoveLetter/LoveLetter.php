@@ -174,7 +174,16 @@ class LoveLetter implements GameInterface
         $this->playerTurn = $id;
         $this->firstPlayerSelected = true;
         $this->status = 'Erster Spieler ' . $player->getName() . ' ist dran...';
+        $this->drawCardForActivePlayer();
         $this->updateState();
+    }
+
+    protected function drawCardForActivePlayer()
+    {
+        $player = $this->getPlayerById($this->playerTurn);
+        $state = $player->getGameState();
+        $state['cards'][] = $this->drawCard();
+        $player->setGameState($state);
     }
 
     public function getGlobalState()
