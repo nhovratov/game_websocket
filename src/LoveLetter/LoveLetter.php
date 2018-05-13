@@ -72,18 +72,39 @@ class LoveLetter implements GameInterface
 
     ];
 
-    protected $players;
+    /**
+     * @var array
+     */
+    protected $players = [];
 
+    /**
+     * @var bool
+     */
     protected $gameStarted = false;
 
+    /**
+     * @var array
+     */
     protected $stack = [];
 
+    /**
+     * @var array
+     */
     protected $reserve = [];
 
+    /**
+     * @var array
+     */
     protected $openCards = [];
 
+    /**
+     * @var array
+     */
     protected $outOfGameCards = [];
 
+    /**
+     * @var bool
+     */
     protected $firstPlayerSelected = false;
 
     /**
@@ -91,11 +112,25 @@ class LoveLetter implements GameInterface
      */
     protected $playerTurn;
 
+    /**
+     * @var bool
+     */
     protected $waitingForPlayerToChooseCard = false;
 
+    /**
+     * @var bool
+     */
+    protected $waitingForPlayerToChoosePlayer = false;
+
+    /**
+     * @var string
+     */
     protected $status = '';
 
-    protected $activeCard;
+    /**
+     * @var array
+     */
+    protected $activeCard = [];
 
     public function __construct()
     {
@@ -255,6 +290,7 @@ class LoveLetter implements GameInterface
             'firstPlayerSelected' => $this->firstPlayerSelected,
             'playerTurn' => $this->playerTurn,
             'waitingForPlayerToChooseCard' => $this->waitingForPlayerToChooseCard,
+            'waitingForPlayerToChoosePlayer' => $this->waitingForPlayerToChoosePlayer,
             'outOfGameCards' => $this->outOfGameCards,
             'openCards' => $this->openCards,
             'status' => $this->status
@@ -302,42 +338,93 @@ class LoveLetter implements GameInterface
     protected function guardianEffect($params = false)
     {
         echo "Wächterin Effekt aktivieren";
-        // 1. Player chooses other player
+        if (!$params) {
+            $this->waitingForPlayerToChoosePlayer = true;
+            $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus.';
+            return;
+        }
     }
 
-    protected function priestEffect()
+    /**
+     * Schaue dir die Handkarte eines Mitspielers an.
+     * @param bool $params
+     */
+    protected function priestEffect($params = false)
     {
         echo "Priester Effekt aktivieren";
+        if (!$params) {
+            $this->waitingForPlayerToChoosePlayer = true;
+            $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus.';
+            return;
+        }
     }
 
-    protected function baronEffect()
+    /**
+     * Vergleiche deine Handkarte mit der eines Mitspielers. Der Spieler mit dem niedrigeren Wert scheidet aus.
+     * @param bool $params
+     */
+    protected function baronEffect($params = false)
     {
+        if (!$params) {
+            $this->waitingForPlayerToChoosePlayer = true;
+            $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus.';
+            return;
+        }
         echo "Baron Effekt aktivieren";
     }
 
+    /**
+     * Du bist bis zu deinem nächsten Zug geschützt.
+     */
     protected function maidEffect()
     {
         echo "Zofe Effekt aktivieren";
+        // You are protected
     }
 
-    protected function princeEffect()
+    /**
+     * Wähle einen Spieler, der seine Handkarte ablegt und eine neue Karte zieht.
+     * @param bool $params
+     */
+    protected function princeEffect($params = false)
     {
+        if (!$params) {
+            $this->waitingForPlayerToChoosePlayer = true;
+            $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus.';
+            return;
+        }
         echo "Prinz Effekt aktivieren";
     }
 
-    protected function kingEffect()
+    /**
+     * Tausche deine Handkarte mit der eines Mitspielers
+     * @param bool $params
+     */
+    protected function kingEffect($params = false)
     {
+        if (!$params) {
+            $this->waitingForPlayerToChoosePlayer = true;
+            $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus.';
+            return;
+        }
         echo "König Effekt aktivieren";
     }
 
+    /**
+     * Wenn du zusätzlich König oder Prinz auf der Hand hast, musst du die Gräfin ausspielen.
+     */
     protected function countessEffect()
     {
-        echo "Gräfin Effekt aktivieren";
+        // Do nothing
     }
 
+    /**
+     * Wenn du die Prinzessin ablegst, scheidest du aus.
+     */
     protected function princessEffect()
     {
         echo "Prinzessin Effekt aktivieren";
+        // You are out
     }
 
 }
