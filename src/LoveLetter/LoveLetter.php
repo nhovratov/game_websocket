@@ -9,6 +9,7 @@
 namespace MyApp\LoveLetter;
 
 use MyApp\GameInterface;
+use MyApp\Player;
 
 class LoveLetter implements GameInterface
 {
@@ -90,9 +91,10 @@ class LoveLetter implements GameInterface
     {
         $this->players = $players;
         $this->gameStarted = true;
+        /** @var Player $player */
         foreach ($this->players as $player) {
             $currentState = $player->getGameState();
-            $currentState['cards'] = $this->convertObjectArrayToAssocArray([$this->drawCard()]);
+            $currentState['cards'] = [$this->drawCard()];
             $player->setGameState($currentState);
         }
         $this->reserve[] = $this->drawCard();
@@ -106,6 +108,7 @@ class LoveLetter implements GameInterface
 
     public function updateState()
     {
+        /** @var Player $player */
         foreach ($this->players as $player) {
             $msg = [
                 'dataType' => 'game',
@@ -120,7 +123,11 @@ class LoveLetter implements GameInterface
     {
         foreach (self::CARDTYPES as $type) {
             for ($i = 0; $i < $type['count']; $i++) {
-                $this->stack[] = new Card($type['name'], $type['value'], $type['effect']);
+                $this->stack[] = [
+                    'name' => $type['name'],
+                    'value' => $type['value'],
+                    'effect' => $type['effect']
+                ];
             }
         }
         shuffle($this->stack);
@@ -135,17 +142,8 @@ class LoveLetter implements GameInterface
     {
         return [
             'gameStarted' => $this->gameStarted,
-            'outOfGameCards' => $this->convertObjectArrayToAssocArray($this->outOfGameCards)
+            'outOfGameCards' => $this->outOfGameCards
         ];
-    }
-
-    protected function convertObjectArrayToAssocArray($objArray)
-    {
-        $assocArray = [];
-        foreach ($objArray as $element) {
-            $assocArray[] = $element->toArray();
-        }
-        return $assocArray;
     }
 
     /**
