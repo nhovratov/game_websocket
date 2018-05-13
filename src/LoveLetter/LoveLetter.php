@@ -91,9 +91,11 @@ class LoveLetter implements GameInterface
      */
     protected $playerTurn;
 
-    protected $waitingForPlayer = false;
+    protected $waitingForPlayerToChooseCard = false;
 
     protected $status = '';
+
+    protected $activeCard;
 
     public function __construct()
     {
@@ -184,7 +186,7 @@ class LoveLetter implements GameInterface
         $this->firstPlayerSelected = true;
         $this->status = $player->getName() . ' ist dran...';
         $this->drawCardForActivePlayer();
-        $this->waitingForPlayer = true;
+        $this->waitingForPlayerToChooseCard = true;
         $this->updateState();
     }
 
@@ -192,11 +194,45 @@ class LoveLetter implements GameInterface
     {
         $index = $params['index'];
         $player = $this->getActivePlayer();
-        $state =  $player->getGameState();
-        $this->openCards = array_splice($state['cards'], $index, 1);
+        $state = $player->getGameState();
+        $this->activeCard = array_splice($state['cards'], $index, 1)[0];
+        $this->openCards[] = $this->activeCard;
+        $this->handleEffect($this->activeCard);
         $player->setGameState($state);
-        $this->waitingForPlayer = false;
+        $this->waitingForPlayerToChooseCard = false;
         $this->updateState();
+    }
+
+    protected function handleEffect($card)
+    {
+        switch ($card['name']) {
+            case 'Wächterin':
+                $this->guardianEffect();
+                break;
+            case 'Priester':
+                $this->priestEffect();
+                break;
+            case 'Baron':
+                $this->baronEffect();
+                break;
+            case 'Zofe':
+                $this->maidEffect();
+                break;
+            case 'Prinz':
+                $this->princeEffect();
+                break;
+            case 'König':
+                $this->kingEffect();
+                break;
+            case 'Gräfin':
+                $this->countessEffect();
+                break;
+            case 'Prinzessin':
+                $this->princessEffect();
+                break;
+            default:
+                // do nothing
+        }
     }
 
     protected function drawCardForActivePlayer()
@@ -218,7 +254,7 @@ class LoveLetter implements GameInterface
             'gameStarted' => $this->gameStarted,
             'firstPlayerSelected' => $this->firstPlayerSelected,
             'playerTurn' => $this->playerTurn,
-            'waitingForPlayer' => $this->waitingForPlayer,
+            'waitingForPlayerToChooseCard' => $this->waitingForPlayerToChooseCard,
             'outOfGameCards' => $this->outOfGameCards,
             'openCards' => $this->openCards,
             'status' => $this->status
@@ -257,6 +293,51 @@ class LoveLetter implements GameInterface
             }
         }
         return false;
+    }
+
+    /**
+     * Errätst du die Handkarte eines Mitspielers, scheidet dieser aus. Gilt nicht für "Wächterin"!
+     * @param bool $params
+     */
+    protected function guardianEffect($params = false)
+    {
+        echo "Wächterin Effekt aktivieren";
+        // 1. Player chooses other player
+    }
+
+    protected function priestEffect()
+    {
+        echo "Priester Effekt aktivieren";
+    }
+
+    protected function baronEffect()
+    {
+        echo "Baron Effekt aktivieren";
+    }
+
+    protected function maidEffect()
+    {
+        echo "Zofe Effekt aktivieren";
+    }
+
+    protected function princeEffect()
+    {
+        echo "Prinz Effekt aktivieren";
+    }
+
+    protected function kingEffect()
+    {
+        echo "König Effekt aktivieren";
+    }
+
+    protected function countessEffect()
+    {
+        echo "Gräfin Effekt aktivieren";
+    }
+
+    protected function princessEffect()
+    {
+        echo "Prinzessin Effekt aktivieren";
     }
 
 }
