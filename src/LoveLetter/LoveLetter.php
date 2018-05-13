@@ -82,6 +82,8 @@ class LoveLetter implements GameInterface
 
     protected $outOfGameCards = [];
 
+    protected $firstPlayerSelected = false;
+
     public function __construct()
     {
         $this->generateStack();
@@ -108,13 +110,26 @@ class LoveLetter implements GameInterface
 
     public function updateState()
     {
+        if (!$this->gameStarted) {
+            return;
+        }
+        $playerinfo = [];
+        if ($this->gameStarted) {
+            $playerinfo = $this->getPlayers();
+        }
         /** @var Player $player */
         foreach ($this->players as $player) {
+            if (!$player->getClient()) {
+                continue;
+            }
             $msg = [
                 'dataType' => 'game',
                 'global' => $this->getGlobalState(),
                 'local' => $player->getGameState()
             ];
+            if ($playerinfo) {
+                $msg['global']['players'] = $playerinfo;
+            }
             $player->getClient()->send(json_encode($msg));
         }
     }
@@ -140,10 +155,12 @@ class LoveLetter implements GameInterface
 
     public function getGlobalState()
     {
-        return [
+        $msg = [
             'gameStarted' => $this->gameStarted,
+            'firstPlayerSelected' => $this->firstPlayerSelected,
             'outOfGameCards' => $this->outOfGameCards
         ];
+        return $msg;
     }
 
     /**
@@ -153,4 +170,20 @@ class LoveLetter implements GameInterface
     {
         return $this->stack;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getPlayers()
+    {
+        $players = [];
+        foreach ($this->players as $player) {
+            $players[] = [
+                "id" => $player->getId(),
+                "name" => $player->getName(),
+            ];
+        }
+        return $players;
+    }
+
 }
