@@ -84,6 +84,8 @@ class LoveLetter implements GameInterface
 
     protected $firstPlayerSelected = false;
 
+    protected $status = '';
+
     public function __construct()
     {
         $this->generateStack();
@@ -105,6 +107,7 @@ class LoveLetter implements GameInterface
                 $this->outOfGameCards[] = $this->drawCard();
             }
         }
+        $this->status = 'Host wählt ersten Spieler...';
         $this->updateState();
     }
 
@@ -158,7 +161,8 @@ class LoveLetter implements GameInterface
         $msg = [
             'gameStarted' => $this->gameStarted,
             'firstPlayerSelected' => $this->firstPlayerSelected,
-            'outOfGameCards' => $this->outOfGameCards
+            'outOfGameCards' => $this->outOfGameCards,
+            'status' => $this->status
         ];
         return $msg;
     }
