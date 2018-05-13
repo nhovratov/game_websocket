@@ -84,6 +84,8 @@ class LoveLetter implements GameInterface
 
     protected $firstPlayerSelected = false;
 
+    protected $playerTurn;
+
     protected $status = '';
 
     public function __construct()
@@ -109,6 +111,16 @@ class LoveLetter implements GameInterface
         }
         $this->status = 'Host wählt ersten Spieler...';
         $this->updateState();
+    }
+
+    public function handleAction($action, $params)
+    {
+        switch ($action) {
+            case 'selectFirstPlayer':
+                $this->selectFirstPlayer($params['id']);
+                break;
+            default:
+        }
     }
 
     public function updateState()
@@ -156,11 +168,21 @@ class LoveLetter implements GameInterface
         return array_pop($this->stack);
     }
 
+    protected function selectFirstPlayer($id)
+    {
+        $player = $this->getPlayerById($id);
+        $this->playerTurn = $id;
+        $this->firstPlayerSelected = true;
+        $this->status = 'Erster Spieler ' . $player->getName() . ' ist dran...';
+        $this->updateState();
+    }
+
     public function getGlobalState()
     {
         $msg = [
             'gameStarted' => $this->gameStarted,
             'firstPlayerSelected' => $this->firstPlayerSelected,
+            'playerTurn' => $this->playerTurn,
             'outOfGameCards' => $this->outOfGameCards,
             'status' => $this->status
         ];
@@ -188,6 +210,16 @@ class LoveLetter implements GameInterface
             ];
         }
         return $players;
+    }
+
+    protected function getPlayerById($id)
+    {
+        foreach ($this->players as $player) {
+            if ($player->getId() == $id) {
+                return $player;
+            }
+        }
+        return false;
     }
 
 }

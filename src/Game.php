@@ -103,6 +103,7 @@ class Game implements MessageComponentInterface
                     $this->game->start($this->players);
                     break;
                 default:
+                    $this->game->handleAction($msg['action'], $msg['params']);
             }
         }
 
