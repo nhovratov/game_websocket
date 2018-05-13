@@ -388,7 +388,6 @@ class LoveLetter implements GameInterface
      */
     protected function guardianEffect($params)
     {
-        echo "Wächterin Effekt aktivieren";
         if (!$params) {
             $this->waitingForPlayerToChoosePlayer = true;
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
@@ -406,7 +405,6 @@ class LoveLetter implements GameInterface
      */
     protected function priestEffect($params)
     {
-        echo "Priester Effekt aktivieren";
         if (!$params) {
             $this->waitingForPlayerToChoosePlayer = true;
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
@@ -424,7 +422,6 @@ class LoveLetter implements GameInterface
      */
     protected function baronEffect($params)
     {
-        echo "Baron Effekt aktivieren";
         if (!$params) {
             $this->waitingForPlayerToChoosePlayer = true;
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
@@ -441,7 +438,6 @@ class LoveLetter implements GameInterface
      */
     protected function maidEffect()
     {
-        echo "Zofe Effekt aktivieren";
         // You are protected
         // TODO Implement functionality
         $this->activeCard['effectFinished'] = true;
@@ -454,7 +450,6 @@ class LoveLetter implements GameInterface
      */
     protected function princeEffect($params)
     {
-        echo "Prinz Effekt aktivieren";
         if (!$params) {
             $this->waitingForPlayerToChoosePlayer = true;
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
@@ -472,7 +467,6 @@ class LoveLetter implements GameInterface
      */
     protected function kingEffect($params)
     {
-        echo "König Effekt aktivieren";
         if (!$params) {
             $this->waitingForPlayerToChoosePlayer = true;
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
@@ -498,7 +492,6 @@ class LoveLetter implements GameInterface
      */
     protected function princessEffect()
     {
-        echo "Prinzessin Effekt aktivieren";
         // You are out
         // TODO Implement functionality
         $this->activeCard['effectFinished'] = true;
