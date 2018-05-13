@@ -98,12 +98,16 @@ class Game implements MessageComponentInterface
         }
 
         if (isset($msg['action'])) {
+            $params = [];
+            if (key_exists('params', $msg)) {
+                $params = $msg['params'];
+            }
             switch ($msg['action']) {
                 case 'start':
                     $this->game->start($this->players);
                     break;
                 default:
-                    $this->game->handleAction($msg['action'], $msg['params']);
+                    $this->game->handleAction($msg['action'], $params);
             }
         }
 
