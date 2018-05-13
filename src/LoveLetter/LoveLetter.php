@@ -128,6 +128,34 @@ class LoveLetter implements GameInterface
     protected $waitingForPlayerToChoosePlayer = false;
 
     /**
+     * @var array
+     */
+    protected $outOfGamePlayers = [];
+
+    /**
+     * @var array
+     */
+    protected $guardianEffectDefault = [
+        'cardSelected' => true,
+        'step' => 1,
+        'name' => '',
+        'selectableCards' => [
+            'Priester',
+            'Baron',
+            'Zofe',
+            'Prinz',
+            'König',
+            'Gräfin',
+            'Prinzessin'
+        ]
+    ];
+
+    /**
+     * @var array
+     */
+    protected $guardianEffect = [];
+
+    /**
      * @var string
      */
     protected $status = '';
@@ -140,6 +168,7 @@ class LoveLetter implements GameInterface
     public function __construct()
     {
         $this->generateStack();
+        $this->guardianEffect = $this->guardianEffectDefault;
     }
 
     public function start($players)
@@ -172,10 +201,15 @@ class LoveLetter implements GameInterface
                 $this->playerChoosesCard($params);
                 break;
             case 'selectPlayerForEffect':
-                $this->selectPlayerForEffect($params);
+                $this->handleEffect($this->activeCard, $params);
+                $this->updateState();
                 break;
             case 'depositActiveCard':
                 $this->depositActiveCard();
+                break;
+            case 'selectGuardianEffectCard':
+                $this->handleEffect($this->activeCard, $params);
+                $this->updateState();
                 break;
             default:
         }
@@ -248,14 +282,9 @@ class LoveLetter implements GameInterface
         $this->updateState();
     }
 
-    protected function selectPlayerForEffect($params)
-    {
-        $this->handleEffect($this->activeCard, $params);
-    }
-
     protected function depositActiveCard()
     {
-        $this->depositedCards[] = array_splice($this->openCards, 0 , 1)[0];
+        $this->depositedCards[] = array_splice($this->openCards, 0, 1)[0];
         $activePlayer = $this->getNextPlayer();
         $this->startNewTurn($activePlayer);
         $this->updateState();
@@ -269,7 +298,7 @@ class LoveLetter implements GameInterface
         $this->status = "{$player->getName()} ist dran ...";
     }
 
-    protected function handleEffect($card, $params = false)
+    protected function handleEffect($card, $params = [])
     {
         switch ($card['name']) {
             case 'Wächterin':
@@ -344,7 +373,11 @@ class LoveLetter implements GameInterface
             'outOfGameCards' => $this->outOfGameCards,
             'openCards' => $this->openCards,
             'activeCard' => $this->activeCard,
-            'status' => $this->status
+            'guardianEffectCardSelected' => $this->guardianEffect['cardSelected'],
+            'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
+            'guardianEffectChosenPlayer' => $this->guardianEffect['name'],
+            'status' => $this->status,
+            'outOfGamePlayers' => $this->outOfGamePlayers
         ];
         return $msg;
     }
@@ -384,24 +417,47 @@ class LoveLetter implements GameInterface
 
     /**
      * Errätst du die Handkarte eines Mitspielers, scheidet dieser aus ... Gilt nicht für "Wächterin"!
-     * @param bool $params
+     * @param array $params
      */
     protected function guardianEffect($params)
     {
-        if (!$params) {
+        // Initial invocation without parameters, let player select other player.
+        if ($this->guardianEffect['step'] === 1) {
             $this->waitingForPlayerToChoosePlayer = true;
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
+            $this->guardianEffect['step'] = 2;
             return;
         }
-        $this->waitingForPlayerToChoosePlayer = false;
-        // TODO Implement functionality
+
+        // Player has selected other player. Now let him guess a card.
+        if ($this->guardianEffect['step'] === 2) {
+            $this->waitingForPlayerToChoosePlayer = false;
+            $id = $params['id'];
+            $chosenPlayer = $this->getPlayerById($id);
+            $this->guardianEffect['id'] = $id;
+            $this->guardianEffect['name'] = $chosenPlayer->getName();
+            $this->guardianEffect['cardSelected'] = false;
+            $this->guardianEffect['step'] = 3;
+            return;
+        }
+
+        // Check if player was right, then the other player is out.
+        $chosenPlayer = $this->getPlayerById($this->guardianEffect['id']);
+        $card = $params['card'];
+        if ($card === $chosenPlayer->getGameState()['cards'][0]['name']) {
+            $this->outOfGamePlayers[] = $chosenPlayer->getId();
+            $this->status = $card .  '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
+        } else {
+            $this->status = $card . '! Falsch geraten! ';
+        }
         $this->activeCard['effectFinished'] = true;
-        $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
+        $this->guardianEffect = $this->guardianEffectDefault;
+        $this->status .= $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
     /**
      * Schaue dir die Handkarte eines Mitspielers an.
-     * @param bool $params
+     * @param array $params
      */
     protected function priestEffect($params)
     {
@@ -418,7 +474,7 @@ class LoveLetter implements GameInterface
 
     /**
      * Vergleiche deine Handkarte mit der eines Mitspielers. Der Spieler mit dem niedrigeren Wert scheidet aus ...
-     * @param bool $params
+     * @param array $params
      */
     protected function baronEffect($params)
     {
@@ -446,7 +502,7 @@ class LoveLetter implements GameInterface
 
     /**
      * Wähle einen Spieler, der seine Handkarte ablegt und eine neue Karte zieht.
-     * @param bool $params
+     * @param array $params
      */
     protected function princeEffect($params)
     {
@@ -463,7 +519,7 @@ class LoveLetter implements GameInterface
 
     /**
      * Tausche deine Handkarte mit der eines Mitspielers
-     * @param bool $params
+     * @param array $params
      */
     protected function kingEffect($params)
     {
