@@ -27,6 +27,7 @@ class Game implements MessageComponentInterface
         $this->players = new \SplObjectStorage();
         $this->clients = new \SplObjectStorage();
         $this->game = new LoveLetter();
+        $this->globalState['status'] = 'Willkommen!';
     }
 
     /**
@@ -104,7 +105,8 @@ class Game implements MessageComponentInterface
             }
             switch ($msg['action']) {
                 case 'start':
-                    $this->game->start($this->players);
+                    $this->game->start(clone $this->players);
+                    $this->globalState['status'] = 'Spiel läuft ...';
                     break;
                 default:
                     $this->game->handleAction($msg['action'], $params);
