@@ -364,7 +364,7 @@ class LoveLetter implements GameInterface
 
     public function getGlobalState()
     {
-        $msg = [
+        return [
             'gameStarted' => $this->gameStarted,
             'firstPlayerSelected' => $this->firstPlayerSelected,
             'playerTurn' => $this->playerTurn,
@@ -380,7 +380,6 @@ class LoveLetter implements GameInterface
             'status' => $this->status,
             'outOfGamePlayers' => $this->outOfGamePlayers
         ];
-        return $msg;
     }
 
     /**
