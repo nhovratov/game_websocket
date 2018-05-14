@@ -42,7 +42,7 @@ class Game implements MessageComponentInterface
         $conn->send(json_encode([
             'global' => $this->globalState,
             'local' => [
-                'id' => $conn->resourceId
+                'id' => $this->getUniqueId($conn->resourceId)
             ]
         ]));
         echo "New connection! ({$conn->resourceId})\n";
@@ -136,6 +136,16 @@ class Game implements MessageComponentInterface
     {
         $this->updateGlobalState();
         $this->alertAll();
+    }
+
+    protected function getUniqueId($id)
+    {
+        foreach ($this->players as $player) {
+            if ($player->getId() == $id) {
+                return $id + 1;
+            }
+        }
+        return $id;
     }
 
     protected function playerExists($id)
