@@ -133,6 +133,16 @@ class LoveLetter implements GameInterface
     protected $outOfGamePlayers = [];
 
     /**
+     * @var bool
+     */
+    protected $gameFinished = false;
+
+    /**
+     * @var string
+     */
+    protected $winner = '';
+
+    /**
      * @var array
      */
     protected $guardianEffectDefault = [
@@ -386,7 +396,9 @@ class LoveLetter implements GameInterface
             'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
             'guardianEffectChosenPlayer' => $this->guardianEffect['name'],
             'status' => $this->status,
-            'outOfGamePlayers' => $this->outOfGamePlayers
+            'outOfGamePlayers' => $this->outOfGamePlayers,
+            'gameFinished' => $this->gameFinished,
+            'winner' => $this->winner
         ];
     }
 
@@ -423,6 +435,20 @@ class LoveLetter implements GameInterface
         return false;
     }
 
+    protected function checkIfGameIsFinished()
+    {
+        if (count($this->outOfGamePlayers) === $this->players->count() - 1) {
+            $this->gameFinished = true;
+            $victoriousPlayer = $this->getNextPlayer();
+            $this->winner = $victoriousPlayer->getId();
+            $this->status = $victoriousPlayer->getName() . " hat gewonnen!";
+            $this->updateState();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     /**
      * Errätst du die Handkarte eines Mitspielers, scheidet dieser aus ... Gilt nicht für "Wächterin"!
      * @param array $params
@@ -457,7 +483,10 @@ class LoveLetter implements GameInterface
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
             $this->depositedCards[] = array_splice($chosenPlayerState['cards'], 0, 1)[0];
             $chosenPlayer->setGameState($chosenPlayerState);
-            $this->status = $card .  '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
+            $this->status = $card . '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
+            if ($this->checkIfGameIsFinished()) {
+                return;
+            }
         } else {
             $this->status = $card . '! Falsch geraten! ';
         }
