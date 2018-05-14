@@ -100,7 +100,7 @@ class LoveLetter implements GameInterface
     /**
      * @var array
      */
-    protected $depositedCards = [];
+    protected $discardPile = [];
 
     /**
      * @var array
@@ -214,8 +214,8 @@ class LoveLetter implements GameInterface
                 $this->handleEffect($this->activeCard, $params);
                 $this->updateState();
                 break;
-            case 'depositActiveCard':
-                $this->depositActiveCard();
+            case 'discardActiveCard':
+                $this->discardActiveCard();
                 break;
             case 'selectGuardianEffectCard':
                 $this->handleEffect($this->activeCard, $params);
@@ -292,9 +292,9 @@ class LoveLetter implements GameInterface
         $this->updateState();
     }
 
-    protected function depositActiveCard()
+    protected function discardActiveCard()
     {
-        $this->depositedCards[] = array_splice($this->openCards, 0, 1)[0];
+        $this->discardPile[] = array_splice($this->openCards, 0, 1)[0];
         $activePlayer = $this->getNextPlayer();
         $this->startNewTurn($activePlayer);
         $this->updateState();
@@ -389,7 +389,7 @@ class LoveLetter implements GameInterface
             'waitingForPlayerToChooseCard' => $this->waitingForPlayerToChooseCard,
             'waitingForPlayerToChoosePlayer' => $this->waitingForPlayerToChoosePlayer,
             'outOfGameCards' => $this->outOfGameCards,
-            'depositedCards' => $this->depositedCards,
+            'discardPile' => $this->discardPile,
             'openCards' => $this->openCards,
             'activeCard' => $this->activeCard,
             'guardianEffectCardSelected' => $this->guardianEffect['cardSelected'],
@@ -481,7 +481,7 @@ class LoveLetter implements GameInterface
         $chosenPlayerState = $chosenPlayer->getGameState();
         if ($card === $chosenPlayerState['cards'][0]['name']) {
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
-            $this->depositedCards[] = array_splice($chosenPlayerState['cards'], 0, 1)[0];
+            $this->discardPile[] = array_splice($chosenPlayerState['cards'], 0, 1)[0];
             $chosenPlayer->setGameState($chosenPlayerState);
             $this->status = $card . '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
             if ($this->checkIfGameIsFinished()) {
