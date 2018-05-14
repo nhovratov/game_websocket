@@ -345,6 +345,7 @@ class LoveLetter implements GameInterface
 
     protected function getNextPlayer()
     {
+        // First find the active player
         while (true) {
             if (!$this->players->valid()) {
                 $this->players->rewind();
@@ -352,10 +353,17 @@ class LoveLetter implements GameInterface
             $player = $this->players->current();
             if ($player->getId() == $this->playerTurn) {
                 $this->players->next();
-                if (!$this->players->valid()) {
-                    $this->players->rewind();
+                // Now find the next player who is not out of the game
+                while (true) {
+                    if (!$this->players->valid()) {
+                        $this->players->rewind();
+                    }
+                    if (in_array($this->players->current()->getId(), $this->outOfGamePlayers)) {
+                        $this->players->next();
+                    } else {
+                        return $this->players->current();
+                    }
                 }
-                return $this->players->current();
             }
             $this->players->next();
         }
