@@ -444,8 +444,11 @@ class LoveLetter implements GameInterface
         // Check if player was right, then the other player is out.
         $chosenPlayer = $this->getPlayerById($this->guardianEffect['id']);
         $card = $params['card'];
-        if ($card === $chosenPlayer->getGameState()['cards'][0]['name']) {
+        $chosenPlayerState = $chosenPlayer->getGameState();
+        if ($card === $chosenPlayerState['cards'][0]['name']) {
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
+            $this->depositedCards[] = array_splice($chosenPlayerState['cards'], 0, 1)[0];
+            $chosenPlayer->setGameState($chosenPlayerState);
             $this->status = $card .  '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
         } else {
             $this->status = $card . '! Falsch geraten! ';
