@@ -390,6 +390,7 @@ class LoveLetter implements GameInterface
             'waitingForPlayerToChoosePlayer' => $this->waitingForPlayerToChoosePlayer,
             'outOfGameCards' => $this->outOfGameCards,
             'discardPile' => $this->discardPile,
+            'reserve' => $this->reserve,
             'openCards' => $this->openCards,
             'activeCard' => $this->activeCard,
             'guardianEffectCardSelected' => $this->guardianEffect['cardSelected'],
