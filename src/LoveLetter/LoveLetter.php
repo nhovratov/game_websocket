@@ -83,6 +83,11 @@ class LoveLetter implements GameInterface
     protected $gameStarted = false;
 
     /**
+     * @var bool
+     */
+    protected $gameFinished = true;
+
+    /**
      * @var array
      */
     protected $stack = [];
@@ -132,10 +137,6 @@ class LoveLetter implements GameInterface
      */
     protected $outOfGamePlayers = [];
 
-    /**
-     * @var bool
-     */
-    protected $gameFinished = false;
 
     /**
      * @var string
@@ -175,9 +176,16 @@ class LoveLetter implements GameInterface
      */
     protected $activeCard = [];
 
-    public function start($players)
+    public function __construct()
     {
         $this->generateStack();
+    }
+
+    public function start($players)
+    {
+        if (!$this->gameFinished) {
+            return;
+        }
         $this->players = $players;
         $this->gameStarted = true;
         $this->guardianEffect = $this->guardianEffectDefault;
