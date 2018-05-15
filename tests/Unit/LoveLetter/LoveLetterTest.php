@@ -32,7 +32,27 @@ class LoveLetterTest extends TestCase {
     /**
      * @test
      */
-    public function testStart()
+    public function testStart2()
+    {
+        $this->players->attach(new Player(new Connection(), 1));
+        $this->players->attach(new Player(new Connection(), 2));
+        $this->game->start($this->players);
+        $state = $this->game->getGlobalState();
+
+        $this->assertCount(2, $this->game->getPlayers());
+        $this->players->rewind();
+        $this->assertTrue($state['gameStarted']);
+        $this->assertCount(1, $state['reserve']);
+        $this->assertCount(3, $state['outOfGameCards']);
+        foreach ($this->players as $player) {
+            $this->assertCount(1, $player->getGameState()['cards']);
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function testStart3()
     {
         $this->players->attach(new Player(new Connection(), 1));
         $this->players->attach(new Player(new Connection(), 2));
@@ -41,6 +61,28 @@ class LoveLetterTest extends TestCase {
         $state = $this->game->getGlobalState();
 
         $this->assertCount(3, $this->game->getPlayers());
+        $this->players->rewind();
+        $this->assertTrue($state['gameStarted']);
+        $this->assertCount(1, $state['reserve']);
+        $this->assertCount(0, $state['outOfGameCards']);
+        foreach ($this->players as $player) {
+            $this->assertCount(1, $player->getGameState()['cards']);
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function testStart4()
+    {
+        $this->players->attach(new Player(new Connection(), 1));
+        $this->players->attach(new Player(new Connection(), 2));
+        $this->players->attach(new Player(new Connection(), 3));
+        $this->players->attach(new Player(new Connection(), 4));
+        $this->game->start($this->players);
+        $state = $this->game->getGlobalState();
+
+        $this->assertCount(4, $this->game->getPlayers());
         $this->players->rewind();
         $this->assertTrue($state['gameStarted']);
         $this->assertCount(1, $state['reserve']);

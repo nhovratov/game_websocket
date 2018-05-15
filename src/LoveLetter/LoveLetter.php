@@ -175,16 +175,12 @@ class LoveLetter implements GameInterface
      */
     protected $activeCard = [];
 
-    public function __construct()
-    {
-        $this->generateStack();
-        $this->guardianEffect = $this->guardianEffectDefault;
-    }
-
     public function start($players)
     {
+        $this->generateStack();
         $this->players = $players;
         $this->gameStarted = true;
+        $this->guardianEffect = $this->guardianEffectDefault;
         /** @var Player $player */
         foreach ($this->players as $player) {
             $currentState = $player->getGameState();
