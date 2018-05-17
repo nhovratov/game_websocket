@@ -13,64 +13,63 @@ use MyApp\Player;
 
 class LoveLetter implements GameInterface
 {
-    const CARDTYPES = [
-        [
-            'name' => 'Prinzessin',
-            'value' => 8,
-            'count' => 1,
-            'effect' => 'Wenn du die Prinzessin ablegst, scheidest du aus ...'
-        ],
 
-        [
-            'name' => 'Gräfin',
-            'value' => 7,
-            'count' => 1,
-            'effect' => 'Wenn du zusätzlich König oder Prinz auf der Hand hast, musst du die Gräfin ausspielen.'
-        ],
-
-        [
-            'name' => 'König',
-            'value' => 6,
-            'count' => 1,
-            'effect' => 'Tausche deine Handkarte mit der eines Mitspielers'
-        ],
-
-        [
-            'name' => 'Prinz',
-            'value' => 5,
-            'count' => 2,
-            'effect' => 'Wähle einen Spieler, der seine Handkarte ablegt und eine neue Karte zieht.'
-        ],
-
-        [
-            'name' => 'Zofe',
-            'value' => 4,
-            'count' => 2,
-            'effect' => 'Du bist bis zu deinem nächsten Zug geschützt.'
-        ],
-
-        [
-            'name' => 'Baron',
-            'value' => 3,
-            'count' => 2,
-            'effect' => 'Vergleiche deine Handkarte mit der eines Mitspielers. Der Spieler mit dem niedrigeren Wert scheidet aus ...'
-        ],
-
-        [
-            'name' => 'Priester',
-            'value' => 2,
-            'count' => 2,
-            'effect' => 'Schaue dir die Handkarte eines Mitspielers an.'
-        ],
-
-        [
-            'name' => 'Wächterin',
-            'value' => 1,
-            'count' => 5,
-            'effect' => 'Errätst du die Handkarte eines Mitspielers, scheidet dieser aus ... Gilt nicht für "Wächterin"!'
-        ]
-
+    const GUARDIANCARD = [
+        'name' => 'Wächterin',
+        'value' => 1,
+        'effect' => 'Errätst du die Handkarte eines Mitspielers, scheidet dieser aus ... Gilt nicht für "Wächterin"!'
     ];
+
+    const PRIESTCARD = [
+        'name' => 'Priester',
+        'value' => 2,
+        'effect' => 'Schaue dir die Handkarte eines Mitspielers an.'
+    ];
+
+    const BARONCARD = [
+        'name' => 'Baron',
+        'value' => 3,
+        'effect' => 'Vergleiche deine Handkarte mit der eines Mitspielers. Der Spieler mit dem niedrigeren Wert scheidet aus ...'
+    ];
+
+    const MAIDCARD = [
+        'name' => 'Zofe',
+        'value' => 4,
+        'effect' => 'Du bist bis zu deinem nächsten Zug geschützt.'
+    ];
+
+    const PRINCECARD = [
+        'name' => 'Prinz',
+        'value' => 5,
+        'effect' => 'Wähle einen Spieler, der seine Handkarte ablegt und eine neue Karte zieht.'
+    ];
+
+    const KINGCARD = [
+        'name' => 'König',
+        'value' => 6,
+        'effect' => 'Tausche deine Handkarte mit der eines Mitspielers'
+    ];
+
+    const COUNTESSCARD = [
+        'name' => 'Gräfin',
+        'value' => 7,
+        'effect' => 'Wenn du zusätzlich König oder Prinz auf der Hand hast, musst du die Gräfin ausspielen.'
+    ];
+
+    const PRINCESSCARD = [
+        'name' => 'Prinzessin',
+        'value' => 8,
+        'effect' => 'Wenn du die Prinzessin ablegst, scheidest du aus ...'
+    ];
+
+    const GUARDIANCOUNT = 5;
+    const PRIESTCOUNT = 2;
+    const BARONCOUNT = 2;
+    const MAIDCOUNT = 2;
+    const PRINCECOUNT = 2;
+    const KINGCOUNT = 1;
+    const COUNTESSCOUNT = 1;
+    const PRINCESSCOUNT = 1;
 
     /**
      * @var array
@@ -257,16 +256,22 @@ class LoveLetter implements GameInterface
 
     protected function generateStack()
     {
-        foreach (self::CARDTYPES as $type) {
-            for ($i = 0; $i < $type['count']; $i++) {
-                $this->stack[] = [
-                    'name' => $type['name'],
-                    'value' => $type['value'],
-                    'effect' => $type['effect'],
-                ];
-            }
-        }
+        $this->insertCards($this->stack, self::GUARDIANCARD, self::GUARDIANCOUNT);
+        $this->insertCards($this->stack, self::PRIESTCARD, self::PRIESTCOUNT);
+        $this->insertCards($this->stack, self::BARONCARD, self::BARONCOUNT);
+        $this->insertCards($this->stack, self::MAIDCARD, self::MAIDCOUNT);
+        $this->insertCards($this->stack, self::PRINCECARD, self::PRINCECOUNT);
+        $this->insertCards($this->stack, self::KINGCARD, self::COUNTESSCOUNT);
+        $this->insertCards($this->stack, self::COUNTESSCARD, self::COUNTESSCOUNT);
+        $this->insertCards($this->stack, self::PRINCESSCARD, self::PRINCESSCOUNT);
         shuffle($this->stack);
+    }
+
+    protected function insertCards(&$stack, $card, $count)
+    {
+        for ($i = 0; $i < $count; $i++) {
+            $stack[] = $card;
+        }
     }
 
     protected function drawCard()
