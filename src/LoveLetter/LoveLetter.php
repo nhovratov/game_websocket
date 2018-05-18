@@ -267,7 +267,7 @@ class LoveLetter implements GameInterface
         shuffle($this->stack);
     }
 
-    protected function insertCards(&$stack, $card, $count)
+    protected function insertCards(&$stack, $card, $count = 1)
     {
         for ($i = 0; $i < $count; $i++) {
             $stack[] = $card;
