@@ -228,6 +228,29 @@ class LoveLetter implements GameInterface
         }
     }
 
+    public function getGlobalState()
+    {
+        return [
+            'gameStarted' => $this->gameStarted,
+            'firstPlayerSelected' => $this->firstPlayerSelected,
+            'playerTurn' => $this->playerTurn,
+            'waitingForPlayerToChooseCard' => $this->waitingForPlayerToChooseCard,
+            'waitingForPlayerToChoosePlayer' => $this->waitingForPlayerToChoosePlayer,
+            'outOfGameCards' => $this->outOfGameCards,
+            'discardPile' => $this->discardPile,
+            'reserve' => $this->reserve,
+            'openCards' => $this->openCards,
+            'activeCard' => $this->activeCard,
+            'guardianEffectCardSelected' => $this->guardianEffect['cardSelected'],
+            'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
+            'guardianEffectChosenPlayer' => $this->guardianEffect['name'],
+            'status' => $this->status,
+            'outOfGamePlayers' => $this->outOfGamePlayers,
+            'gameFinished' => $this->gameFinished,
+            'winner' => $this->winner
+        ];
+    }
+
     public function updateState()
     {
         if (!$this->gameStarted) {
@@ -253,6 +276,22 @@ class LoveLetter implements GameInterface
             $player->getClient()->send(json_encode($msg));
         }
         $this->players->rewind();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPlayers()
+    {
+        $players = [];
+        foreach ($this->players as $player) {
+            $players[] = [
+                "id" => $player->getId(),
+                "name" => $player->getName(),
+            ];
+        }
+        $this->players->rewind();
+        return $players;
     }
 
     protected function generateStack()
@@ -318,38 +357,6 @@ class LoveLetter implements GameInterface
         $this->status = "{$player->getName()} ist dran ...";
     }
 
-    protected function handleEffect($card, $params = [])
-    {
-        switch ($card['name']) {
-            case 'Wächterin':
-                $this->guardianEffect($params);
-                break;
-            case 'Priester':
-                $this->priestEffect($params);
-                break;
-            case 'Baron':
-                $this->baronEffect($params);
-                break;
-            case 'Zofe':
-                $this->maidEffect();
-                break;
-            case 'Prinz':
-                $this->princeEffect($params);
-                break;
-            case 'König':
-                $this->kingEffect($params);
-                break;
-            case 'Gräfin':
-                $this->countessEffect();
-                break;
-            case 'Prinzessin':
-                $this->princessEffect();
-                break;
-            default:
-                // do nothing
-        }
-    }
-
     protected function drawCardForActivePlayer()
     {
         $player = $this->getActivePlayer();
@@ -392,52 +399,6 @@ class LoveLetter implements GameInterface
         return false;
     }
 
-    public function getGlobalState()
-    {
-        return [
-            'gameStarted' => $this->gameStarted,
-            'firstPlayerSelected' => $this->firstPlayerSelected,
-            'playerTurn' => $this->playerTurn,
-            'waitingForPlayerToChooseCard' => $this->waitingForPlayerToChooseCard,
-            'waitingForPlayerToChoosePlayer' => $this->waitingForPlayerToChoosePlayer,
-            'outOfGameCards' => $this->outOfGameCards,
-            'discardPile' => $this->discardPile,
-            'reserve' => $this->reserve,
-            'openCards' => $this->openCards,
-            'activeCard' => $this->activeCard,
-            'guardianEffectCardSelected' => $this->guardianEffect['cardSelected'],
-            'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
-            'guardianEffectChosenPlayer' => $this->guardianEffect['name'],
-            'status' => $this->status,
-            'outOfGamePlayers' => $this->outOfGamePlayers,
-            'gameFinished' => $this->gameFinished,
-            'winner' => $this->winner
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    public function getStack(): array
-    {
-        return $this->stack;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getPlayers()
-    {
-        $players = [];
-        foreach ($this->players as $player) {
-            $players[] = [
-                "id" => $player->getId(),
-                "name" => $player->getName(),
-            ];
-        }
-        $this->players->rewind();
-        return $players;
-    }
 
     protected function getPlayerById($id)
     {
@@ -462,6 +423,38 @@ class LoveLetter implements GameInterface
             return true;
         } else {
             return false;
+        }
+    }
+
+    protected function handleEffect($card, $params = [])
+    {
+        switch ($card['name']) {
+            case 'Wächterin':
+                $this->guardianEffect($params);
+                break;
+            case 'Priester':
+                $this->priestEffect($params);
+                break;
+            case 'Baron':
+                $this->baronEffect($params);
+                break;
+            case 'Zofe':
+                $this->maidEffect();
+                break;
+            case 'Prinz':
+                $this->princeEffect($params);
+                break;
+            case 'König':
+                $this->kingEffect($params);
+                break;
+            case 'Gräfin':
+                $this->countessEffect();
+                break;
+            case 'Prinzessin':
+                $this->princessEffect();
+                break;
+            default:
+                // do nothing
         }
     }
 
