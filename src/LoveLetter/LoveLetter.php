@@ -252,6 +252,7 @@ class LoveLetter implements GameInterface
             }
             $player->getClient()->send(json_encode($msg));
         }
+        $this->players->rewind();
     }
 
     protected function generateStack()
@@ -380,7 +381,9 @@ class LoveLetter implements GameInterface
                     if (in_array($this->players->current()->getId(), $this->outOfGamePlayers)) {
                         $this->players->next();
                     } else {
-                        return $this->players->current();
+                        $nextPlayer = $this->players->current();
+                        $this->players->rewind();
+                        return $nextPlayer;
                     }
                 }
             }
@@ -432,6 +435,7 @@ class LoveLetter implements GameInterface
                 "name" => $player->getName(),
             ];
         }
+        $this->players->rewind();
         return $players;
     }
 
@@ -439,9 +443,11 @@ class LoveLetter implements GameInterface
     {
         foreach ($this->players as $player) {
             if ($player->getId() == $id) {
+                $this->players->rewind();
                 return $player;
             }
         }
+        $this->players->rewind();
         return false;
     }
 
