@@ -211,7 +211,7 @@ class LoveLetter implements GameInterface
                 $this->selectFirstPlayer($params['id']);
                 break;
             case 'chooseCard':
-                $this->playerChoosesCard($params);
+                $this->chooseCard($params);
                 break;
             case 'selectPlayerForEffect':
                 $this->handleEffect($this->activeCard, $params);
@@ -327,7 +327,7 @@ class LoveLetter implements GameInterface
         $this->updateState();
     }
 
-    protected function playerChoosesCard($params)
+    protected function chooseCard($params)
     {
         $index = $params['index'];
         $player = $this->getActivePlayer();
