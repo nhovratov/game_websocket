@@ -71,6 +71,11 @@ class LoveLetter implements GameInterface
     const COUNTESSCOUNT = 1;
     const PRINCESSCOUNT = 1;
 
+    const WAIT_FOR_FIRST_PLAYER_SELECT = 'firstPlayerSelect';
+    const WAIT_FOR_CHOOSE_CARD = 'chooseCard';
+    const WAIT_FOR_CHOOSE_PLAYER = 'choosePlayer';
+    const WAIT_FOR_CHOOSE_GUARDIAN_EFFECT_CARD = 'chooseGuardianEffectCard';
+
     /**
      * @var array
      */
@@ -89,7 +94,7 @@ class LoveLetter implements GameInterface
     /**
      * @var bool
      */
-    protected $gameFinished = true;
+    protected $gameFinished = false;
 
     /**
      * @var array
@@ -117,24 +122,14 @@ class LoveLetter implements GameInterface
     protected $outOfGameCards = [];
 
     /**
-     * @var bool
-     */
-    protected $firstPlayerSelected = false;
-
-    /**
      * @var int
      */
     protected $playerTurn;
 
     /**
-     * @var bool
+     * @var string
      */
-    protected $waitingForPlayerToChooseCard = false;
-
-    /**
-     * @var bool
-     */
-    protected $waitingForPlayerToChoosePlayer = false;
+    protected $waitFor = '';
 
     /**
      * @var array
@@ -151,7 +146,6 @@ class LoveLetter implements GameInterface
      * @var array
      */
     protected $guardianEffectDefault = [
-        'cardSelected' => true,
         'step' => 1,
         'name' => '',
         'selectableCards' => [
@@ -196,9 +190,6 @@ class LoveLetter implements GameInterface
 
     public function start($players)
     {
-        if (!$this->gameFinished) {
-            return;
-        }
         $this->players = $players;
         $this->gameStarted = true;
         $this->guardianEffect = $this->guardianEffectDefault;
@@ -215,10 +206,11 @@ class LoveLetter implements GameInterface
             }
         }
         $this->status = 'Host wählt ersten Spieler...';
+        $this->waitFor = self::WAIT_FOR_FIRST_PLAYER_SELECT;
         $this->updateState();
     }
 
-    public function handleAction($action, $params)
+    public function handleAction($action, $params = [])
     {
         switch ($action) {
             case 'selectFirstPlayer':
@@ -246,22 +238,19 @@ class LoveLetter implements GameInterface
     {
         return [
             'gameStarted' => $this->gameStarted,
-            'firstPlayerSelected' => $this->firstPlayerSelected,
+            'gameFinished' => $this->gameFinished,
+            'winner' => $this->winner,
             'playerTurn' => $this->playerTurn,
-            'waitingForPlayerToChooseCard' => $this->waitingForPlayerToChooseCard,
-            'waitingForPlayerToChoosePlayer' => $this->waitingForPlayerToChoosePlayer,
+            'waitFor' => $this->waitFor,
             'outOfGameCards' => $this->outOfGameCards,
             'discardPile' => $this->discardPile,
             'reserve' => $this->reserve,
             'openCards' => $this->openCards,
             'activeCard' => $this->activeCard,
-            'guardianEffectCardSelected' => $this->guardianEffect['cardSelected'],
             'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
             'guardianEffectChosenPlayer' => $this->guardianEffect['name'],
             'status' => $this->status,
-            'outOfGamePlayers' => $this->outOfGamePlayers,
-            'gameFinished' => $this->gameFinished,
-            'winner' => $this->winner
+            'outOfGamePlayers' => $this->outOfGamePlayers
         ];
     }
 
@@ -315,9 +304,9 @@ class LoveLetter implements GameInterface
 
     protected function selectFirstPlayer($id)
     {
-        $this->firstPlayerSelected = true;
         $player = $this->getPlayerById($id);
         $this->startNewTurn($player);
+        $this->waitFor = self::WAIT_FOR_CHOOSE_CARD;
         $this->updateState();
     }
 
@@ -331,7 +320,6 @@ class LoveLetter implements GameInterface
         $this->activeCard['effectFinished'] = false;
         $this->handleEffect($this->activeCard);
         $player->setGameState($state);
-        $this->waitingForPlayerToChooseCard = false;
         $this->updateState();
     }
 
@@ -339,6 +327,7 @@ class LoveLetter implements GameInterface
     {
         $this->discardPile[] = array_splice($this->openCards, 0, 1)[0];
         $activePlayer = $this->getNextPlayer();
+        $this->activeCard = [];
         $this->startNewTurn($activePlayer);
         $this->updateState();
     }
@@ -347,7 +336,7 @@ class LoveLetter implements GameInterface
     {
         $this->playerTurn = $player->getId();
         $this->drawCardForActivePlayer();
-        $this->waitingForPlayerToChooseCard = true;
+        $this->waitFor = self::WAIT_FOR_CHOOSE_CARD;
         $this->status = "{$player->getName()} ist dran ...";
     }
 
@@ -460,21 +449,20 @@ class LoveLetter implements GameInterface
     {
         // Initial invocation without parameters, let player select other player.
         if ($this->guardianEffect['step'] === 1) {
-            $this->waitingForPlayerToChoosePlayer = true;
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
             $this->guardianEffect['step'] = 2;
+            $this->waitFor = self::WAIT_FOR_CHOOSE_PLAYER;
             return;
         }
 
         // Player has selected other player. Now let him guess a card.
         if ($this->guardianEffect['step'] === 2) {
-            $this->waitingForPlayerToChoosePlayer = false;
             $id = $params['id'];
             $chosenPlayer = $this->getPlayerById($id);
             $this->guardianEffect['id'] = $id;
             $this->guardianEffect['name'] = $chosenPlayer->getName();
-            $this->guardianEffect['cardSelected'] = false;
             $this->guardianEffect['step'] = 3;
+            $this->waitFor = self::WAIT_FOR_CHOOSE_GUARDIAN_EFFECT_CARD;
             return;
         }
 
@@ -505,11 +493,10 @@ class LoveLetter implements GameInterface
     protected function priestEffect($params)
     {
         if (!$params) {
-            $this->waitingForPlayerToChoosePlayer = true;
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
+            $this->waitFor = self::WAIT_FOR_CHOOSE_PLAYER;
             return;
         }
-        $this->waitingForPlayerToChoosePlayer = false;
         // TODO Implement functionality
         $this->activeCard['effectFinished'] = true;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
@@ -522,11 +509,10 @@ class LoveLetter implements GameInterface
     protected function baronEffect($params)
     {
         if (!$params) {
-            $this->waitingForPlayerToChoosePlayer = true;
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
+            $this->waitFor = self::WAIT_FOR_CHOOSE_PLAYER;
             return;
         }
-        $this->waitingForPlayerToChoosePlayer = false;
         // TODO Implement functionality
         $this->activeCard['effectFinished'] = true;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
@@ -550,11 +536,10 @@ class LoveLetter implements GameInterface
     protected function princeEffect($params)
     {
         if (!$params) {
-            $this->waitingForPlayerToChoosePlayer = true;
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
+            $this->waitFor = self::WAIT_FOR_CHOOSE_PLAYER;
             return;
         }
-        $this->waitingForPlayerToChoosePlayer = false;
         // TODO Implement functionality
         $this->activeCard['effectFinished'] = true;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
@@ -567,11 +552,10 @@ class LoveLetter implements GameInterface
     protected function kingEffect($params)
     {
         if (!$params) {
-            $this->waitingForPlayerToChoosePlayer = true;
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
+            $this->waitFor = self::WAIT_FOR_CHOOSE_PLAYER;
             return;
         }
-        $this->waitingForPlayerToChoosePlayer = false;
         // TODO Implement functionality
         $this->activeCard['effectFinished'] = true;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
