@@ -27,7 +27,7 @@ class LoveLetterTest extends TestCase
     public function testStart2()
     {
         $players = new SplObjectStorage();
-        $game = new LoveLetter();
+        $game = new LoveLetter($this->mockStackProvider);
         $players->attach(new Player(new Connection(), 1));
         $players->attach(new Player(new Connection(), 2));
 
@@ -37,21 +37,29 @@ class LoveLetterTest extends TestCase
         $this->assertCount(2, $game->getPlayers());
         $players->rewind();
         $this->assertTrue($state['gameStarted']);
-        $this->assertCount(1, $state['reserve']);
-        $this->assertCount(3, $state['outOfGameCards']);
         foreach ($players as $player) {
-            $this->assertCount(1, $player->getGameState()['cards']);
+            $playerState = $player->getGameState();
+            $this->assertCount(1, $playerState['cards']);
+            $this->assertEquals('Wächterin', $playerState['cards'][0]['name']);
         }
         $players->rewind();
+        $this->assertCount(1, $state['reserve']);
+        $this->assertEquals('Wächterin', $state['reserve'][0]['name']);
+        $this->assertCount(3, $state['outOfGameCards']);
+        $this->assertEquals('Wächterin', $state['outOfGameCards'][0]['name']);
+        $this->assertEquals('Wächterin', $state['outOfGameCards'][1]['name']);
+        $this->assertEquals('Prinzessin', $state['outOfGameCards'][2]['name']);
 
         $game->handleAction('selectFirstPlayer', ['id' => 1]);
         $state = $game->getGlobalState();
         $this->assertTrue($state['firstPlayerSelected']);
         $this->assertEquals(1, $state['playerTurn']);
 
-        $game->handleAction('chooseCard', ['index' => 1]);
+        $game->handleAction('chooseCard', ['index' => 0]);
         $state = $game->getGlobalState();
         $this->assertFalse($state['waitingForPlayerToChooseCard']);
+        $this->assertEquals('Wächterin', $state['activeCard']['name']);
+        $this->assertEquals('Wächterin', $state['openCards'][0]['name']);
     }
 
     /**
@@ -60,7 +68,7 @@ class LoveLetterTest extends TestCase
     public function testStart3()
     {
         $players = new SplObjectStorage();
-        $game = new LoveLetter();
+        $game = new LoveLetter($this->mockStackProvider);
         $players->attach(new Player(new Connection(), 1));
         $players->attach(new Player(new Connection(), 2));
         $players->attach(new Player(new Connection(), 3));
@@ -94,7 +102,7 @@ class LoveLetterTest extends TestCase
     public function testStart4()
     {
         $players = new SplObjectStorage();
-        $game = new LoveLetter();
+        $game = new LoveLetter($this->mockStackProvider);
         $players->attach(new Player(new Connection(), 1));
         $players->attach(new Player(new Connection(), 2));
         $players->attach(new Player(new Connection(), 3));
