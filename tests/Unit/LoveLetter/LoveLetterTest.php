@@ -7,16 +7,18 @@
  */
 
 use MyApp\LoveLetter\LoveLetter;
+use MyApp\Mock\MockStackProvider;
 use MyApp\Player;
 use PHPUnit\Framework\TestCase;
 use Ratchet\Mock\Connection;
 
 class LoveLetterTest extends TestCase
 {
+    protected $mockStackProvider;
 
     public function setUp()
     {
-
+        $this->mockStackProvider = new MockStackProvider();
     }
 
     /**

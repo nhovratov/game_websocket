@@ -77,6 +77,11 @@ class LoveLetter implements GameInterface
     protected $players = [];
 
     /**
+     * @var StackProvider
+     */
+    protected $stackProvider = null;
+
+    /**
      * @var bool
      */
     protected $gameStarted = false;
@@ -175,9 +180,18 @@ class LoveLetter implements GameInterface
      */
     protected $activeCard = [];
 
-    public function __construct()
+    /**
+     * LoveLetter constructor.
+     * @param StackProvider $stackProvider
+     */
+    public function __construct($stackProvider = null)
     {
-        $this->generateStack();
+        if ($stackProvider !== null) {
+            $this->stackProvider = $stackProvider;
+        } else {
+            $this->stackProvider = new StackProvider();
+        }
+        $this->stack = $this->stackProvider->getStack();
     }
 
     public function start($players)
@@ -292,26 +306,6 @@ class LoveLetter implements GameInterface
         }
         $this->players->rewind();
         return $players;
-    }
-
-    protected function generateStack()
-    {
-        $this->insertCards($this->stack, self::GUARDIANCARD, self::GUARDIANCOUNT);
-        $this->insertCards($this->stack, self::PRIESTCARD, self::PRIESTCOUNT);
-        $this->insertCards($this->stack, self::BARONCARD, self::BARONCOUNT);
-        $this->insertCards($this->stack, self::MAIDCARD, self::MAIDCOUNT);
-        $this->insertCards($this->stack, self::PRINCECARD, self::PRINCECOUNT);
-        $this->insertCards($this->stack, self::KINGCARD, self::COUNTESSCOUNT);
-        $this->insertCards($this->stack, self::COUNTESSCARD, self::COUNTESSCOUNT);
-        $this->insertCards($this->stack, self::PRINCESSCARD, self::PRINCESSCOUNT);
-        shuffle($this->stack);
-    }
-
-    protected function insertCards(&$stack, $card, $count = 1)
-    {
-        for ($i = 0; $i < $count; $i++) {
-            $stack[] = $card;
-        }
     }
 
     protected function drawCard()
