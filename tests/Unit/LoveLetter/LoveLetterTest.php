@@ -49,8 +49,6 @@ class LoveLetterTest extends TestCase
             $this->assertEquals('Wächterin', $playerState['cards'][0]['name']);
         }
         $players->rewind();
-        $this->assertCount(1, $state['reserve']);
-        $this->assertEquals('Wächterin', $state['reserve'][0]['name']);
         $this->assertCount(3, $state['outOfGameCards']);
         $this->assertEquals('Wächterin', $state['outOfGameCards'][0]['name']);
         $this->assertEquals('Wächterin', $state['outOfGameCards'][1]['name']);
@@ -105,7 +103,6 @@ class LoveLetterTest extends TestCase
         $this->assertCount(3, $game->getPlayers());
         $players->rewind();
         $this->assertTrue($state['gameStarted']);
-        $this->assertCount(1, $state['reserve']);
         $this->assertCount(0, $state['outOfGameCards']);
     }
 

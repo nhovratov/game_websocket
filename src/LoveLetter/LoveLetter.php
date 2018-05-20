@@ -78,6 +78,22 @@ class LoveLetter implements GameInterface
     const WAIT_FOR_DISCARD_CARD = 'discardCard';
     const WAIT_FOR_START_NEW_GAME = 'startNewGame';
 
+    const GUARDIAN_EFFECT_DEFAULT = [
+        'step' => 1,
+        'name' => '',
+        'selectableCards' => [
+            'Priester',
+            'Baron',
+            'Zofe',
+            'Prinz',
+            'König',
+            'Gräfin',
+            'Prinzessin'
+        ]
+    ];
+
+    // Intern Game state only provided to public if necessary
+
     /**
      * @var array
      */
@@ -87,6 +103,19 @@ class LoveLetter implements GameInterface
      * @var StackProvider
      */
     protected $stackProvider = null;
+
+    /**
+     * @var array
+     */
+    protected $stack = [];
+
+    /**
+     * @var array
+     */
+    protected $reserve = [];
+
+
+    // Global state visible for all players
 
     /**
      * @var bool
@@ -99,14 +128,29 @@ class LoveLetter implements GameInterface
     protected $gameFinished = false;
 
     /**
-     * @var array
+     * @var int
      */
-    protected $stack = [];
+    protected $playerTurn;
+
+    /**
+     * @var string
+     */
+    protected $waitFor = '';
+
+    /**
+     * @var string
+     */
+    protected $status = '';
 
     /**
      * @var array
      */
-    protected $reserve = [];
+    protected $activeCard = [];
+
+    /**
+     * @var array
+     */
+    protected $outOfGameCards = [];
 
     /**
      * @var array
@@ -121,23 +165,7 @@ class LoveLetter implements GameInterface
     /**
      * @var array
      */
-    protected $outOfGameCards = [];
-
-    /**
-     * @var int
-     */
-    protected $playerTurn;
-
-    /**
-     * @var string
-     */
-    protected $waitFor = '';
-
-    /**
-     * @var array
-     */
     protected $outOfGamePlayers = [];
-
 
     /**
      * @var string
@@ -147,34 +175,8 @@ class LoveLetter implements GameInterface
     /**
      * @var array
      */
-    protected $guardianEffectDefault = [
-        'step' => 1,
-        'name' => '',
-        'selectableCards' => [
-            'Priester',
-            'Baron',
-            'Zofe',
-            'Prinz',
-            'König',
-            'Gräfin',
-            'Prinzessin'
-        ]
-    ];
-
-    /**
-     * @var array
-     */
     protected $guardianEffect = [];
 
-    /**
-     * @var string
-     */
-    protected $status = '';
-
-    /**
-     * @var array
-     */
-    protected $activeCard = [];
 
     /**
      * LoveLetter constructor.
@@ -236,42 +238,27 @@ class LoveLetter implements GameInterface
         }
     }
 
-    protected function resetGame()
-    {
-        $this->stack = [];
-        $this->reserve = [];
-        $this->discardPile = [];
-        $this->outOfGameCards = [];
-        $this->activeCard = [];
-        $this->openCards = [];
-        $this->guardianEffect = $this->guardianEffectDefault;
-        $this->winner = '';
-        $this->outOfGamePlayers = [];
-        $this->gameFinished = false;
-        foreach ($this->players as $player) {
-            $player->setGameState([]);
-        }
-        $this->players->rewind();
-        $this->updateState();
-    }
-
     public function getGlobalState()
     {
+        $visibleDiscardedCard = [];
+        $numDicardedCards = count($this->discardPile);
+        if ($numDicardedCards > 0) {
+            $visibleDiscardedCard = [$this->discardPile[$numDicardedCards - 1]];
+        }
         return [
             'gameStarted' => $this->gameStarted,
             'gameFinished' => $this->gameFinished,
-            'winner' => $this->winner,
             'playerTurn' => $this->playerTurn,
             'waitFor' => $this->waitFor,
-            'outOfGameCards' => $this->outOfGameCards,
-            'discardPile' => $this->discardPile,
-            'reserve' => $this->reserve,
-            'openCards' => $this->openCards,
+            'status' => $this->status,
             'activeCard' => $this->activeCard,
+            'outOfGameCards' => $this->outOfGameCards,
+            'openCards' => $this->openCards,
+            'discardPile' => $visibleDiscardedCard,
+            'outOfGamePlayers' => $this->outOfGamePlayers,
+            'winner' => $this->winner,
             'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
             'guardianEffectChosenPlayer' => $this->guardianEffect['name'],
-            'status' => $this->status,
-            'outOfGamePlayers' => $this->outOfGamePlayers
         ];
     }
 
@@ -313,6 +300,25 @@ class LoveLetter implements GameInterface
         }
         $this->players->rewind();
         return $players;
+    }
+
+    protected function resetGame()
+    {
+        $this->stack = [];
+        $this->reserve = [];
+        $this->discardPile = [];
+        $this->outOfGameCards = [];
+        $this->activeCard = [];
+        $this->openCards = [];
+        $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
+        $this->winner = '';
+        $this->outOfGamePlayers = [];
+        $this->gameFinished = false;
+        foreach ($this->players as $player) {
+            $player->setGameState([]);
+        }
+        $this->players->rewind();
+        $this->updateState();
     }
 
     protected function drawCard()
@@ -502,7 +508,7 @@ class LoveLetter implements GameInterface
             $this->status = $card . '! Falsch geraten! ';
         }
         $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
-        $this->guardianEffect = $this->guardianEffectDefault;
+        $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
         $this->status .= $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
