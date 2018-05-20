@@ -93,7 +93,7 @@ class Game implements MessageComponentInterface
             $this->handlePlayer($from, $msg['id']);
         }
 
-        if (isset($msg['name'])) {
+        if (isset($msg['name']) && isset($msg['id'])) {
             $player = $this->getPlayerById($msg['id']);
             $player->setName($msg['name']);
         }
