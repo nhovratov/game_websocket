@@ -76,6 +76,7 @@ class LoveLetter implements GameInterface
     const WAIT_FOR_CHOOSE_PLAYER = 'choosePlayer';
     const WAIT_FOR_CHOOSE_GUARDIAN_EFFECT_CARD = 'chooseGuardianEffectCard';
     const WAIT_FOR_DISCARD_CARD = 'discardCard';
+    const WAIT_FOR_START_NEW_GAME = 'startNewGame';
 
     /**
      * @var array
@@ -186,14 +187,14 @@ class LoveLetter implements GameInterface
         } else {
             $this->stackProvider = new StackProvider();
         }
-        $this->stack = $this->stackProvider->getStack();
     }
 
     public function start($players)
     {
         $this->players = $players;
+        $this->resetGame();
+        $this->stack = $this->stackProvider->getStack();
         $this->gameStarted = true;
-        $this->guardianEffect = $this->guardianEffectDefault;
         /** @var Player $player */
         foreach ($this->players as $player) {
             $currentState = $player->getGameState();
@@ -235,6 +236,25 @@ class LoveLetter implements GameInterface
         }
     }
 
+    protected function resetGame()
+    {
+        $this->stack = [];
+        $this->reserve = [];
+        $this->discardPile = [];
+        $this->outOfGameCards = [];
+        $this->activeCard = [];
+        $this->openCards = [];
+        $this->guardianEffect = $this->guardianEffectDefault;
+        $this->winner = '';
+        $this->outOfGamePlayers = [];
+        $this->gameFinished = false;
+        foreach ($this->players as $player) {
+            $player->setGameState([]);
+        }
+        $this->players->rewind();
+        $this->updateState();
+    }
+
     public function getGlobalState()
     {
         return [
@@ -257,13 +277,10 @@ class LoveLetter implements GameInterface
 
     public function updateState()
     {
-        if (!$this->gameStarted) {
+        if (!$this->players) {
             return;
         }
-        $playerinfo = [];
-        if ($this->gameStarted) {
-            $playerinfo = $this->getPlayers();
-        }
+        $playerinfo = $this->getPlayers();
         /** @var Player $player */
         foreach ($this->players as $player) {
             if (!$player->getClient()) {
@@ -400,9 +417,11 @@ class LoveLetter implements GameInterface
     {
         if (count($this->outOfGamePlayers) === $this->players->count() - 1) {
             $this->gameFinished = true;
+            $this->gameStarted = false;
             $victoriousPlayer = $this->getNextPlayer();
             $this->winner = $victoriousPlayer->getId();
             $this->status = $victoriousPlayer->getName() . " hat gewonnen!";
+            $this->waitFor = 'startNewGame';
             $this->updateState();
             return true;
         } else {
