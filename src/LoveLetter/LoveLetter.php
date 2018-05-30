@@ -79,7 +79,6 @@ class LoveLetter implements GameInterface
     const WAIT_FOR_START_NEW_GAME = 'startNewGame';
 
     const GUARDIAN_EFFECT_DEFAULT = [
-        'step' => 1,
         'name' => '',
         'selectableCards' => [
             'Priester',
@@ -419,7 +418,7 @@ class LoveLetter implements GameInterface
         return false;
     }
 
-    protected function checkIfGameIsFinished()
+    protected function gameIsFinished()
     {
         if (count($this->outOfGamePlayers) === $this->players->count() - 1) {
             $this->gameFinished = true;
@@ -474,20 +473,18 @@ class LoveLetter implements GameInterface
     protected function guardianEffect($params)
     {
         // Initial invocation without parameters, let player select other player.
-        if ($this->guardianEffect['step'] === 1) {
+        if (!$params) {
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
-            $this->guardianEffect['step'] = 2;
             $this->waitFor = self::WAIT_FOR_CHOOSE_PLAYER;
             return;
         }
 
         // Player has selected other player. Now let him guess a card.
-        if ($this->guardianEffect['step'] === 2) {
+        if ($this->waitFor === self::WAIT_FOR_CHOOSE_PLAYER) {
             $id = $params['id'];
             $chosenPlayer = $this->getPlayerById($id);
             $this->guardianEffect['id'] = $id;
             $this->guardianEffect['name'] = $chosenPlayer->getName();
-            $this->guardianEffect['step'] = 3;
             $this->waitFor = self::WAIT_FOR_CHOOSE_GUARDIAN_EFFECT_CARD;
             return;
         }
@@ -500,16 +497,17 @@ class LoveLetter implements GameInterface
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
             $this->discardPile[] = array_splice($chosenPlayerState['cards'], 0, 1)[0];
             $chosenPlayer->setGameState($chosenPlayerState);
-            $this->status = $card . '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
-            if ($this->checkIfGameIsFinished()) {
+            if ($this->gameIsFinished()) {
                 return;
+            } else {
+                $this->status = $card . '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
             }
-        } else {
-            $this->status = $card . '! Falsch geraten! ';
         }
         $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
         $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
-        $this->status .= $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
+        $this->status =
+            $card . '! Falsch geraten! '
+            . $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
     /**
