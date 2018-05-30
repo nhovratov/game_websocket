@@ -77,6 +77,7 @@ class LoveLetter implements GameInterface
     const WAIT_FOR_CHOOSE_GUARDIAN_EFFECT_CARD = 'chooseGuardianEffectCard';
     const WAIT_FOR_DISCARD_CARD = 'discardCard';
     const WAIT_FOR_START_NEW_GAME = 'startNewGame';
+    const WAIT_FOR_FINISH_LOOKING_AT_CARD = 'finishLookingAtCard';
 
     const GUARDIAN_EFFECT_DEFAULT = [
         'name' => '',
@@ -94,7 +95,7 @@ class LoveLetter implements GameInterface
     // Intern Game state only provided to public if necessary
 
     /**
-     * @var array
+     * @var \SplObjectStorage
      */
     protected $players = [];
 
@@ -224,17 +225,20 @@ class LoveLetter implements GameInterface
                 break;
             case 'selectPlayerForEffect':
                 $this->handleEffect($this->activeCard, $params);
-                $this->updateState();
                 break;
             case 'discardActiveCard':
                 $this->discardActiveCard();
                 break;
             case 'selectGuardianEffectCard':
                 $this->handleEffect($this->activeCard, $params);
-                $this->updateState();
+                break;
+            case 'finishLookingAtCard':
+                $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
+                $this->handleEffect($this->activeCard);
                 break;
             default:
         }
+        $this->updateState();
     }
 
     public function getGlobalState()
@@ -355,6 +359,9 @@ class LoveLetter implements GameInterface
         $this->updateState();
     }
 
+    /**
+     * @param Player $player
+     */
     protected function startNewTurn($player)
     {
         $this->playerTurn = $player->getId();
@@ -376,6 +383,9 @@ class LoveLetter implements GameInterface
         return $this->getPlayerById($this->playerTurn);
     }
 
+    /**
+     * @return bool|Player
+     */
     protected function getNextPlayer()
     {
         // First find the active player
@@ -394,6 +404,7 @@ class LoveLetter implements GameInterface
                     if (in_array($this->players->current()->getId(), $this->outOfGamePlayers)) {
                         $this->players->next();
                     } else {
+                        /** @var Player $nextPlayer */
                         $nextPlayer = $this->players->current();
                         $this->players->rewind();
                         return $nextPlayer;
@@ -406,8 +417,13 @@ class LoveLetter implements GameInterface
     }
 
 
+    /**
+     * @param $id
+     * @return bool|Player
+     */
     protected function getPlayerById($id)
     {
+        /** @var Player $player */
         foreach ($this->players as $player) {
             if ($player->getId() == $id) {
                 $this->players->rewind();
@@ -473,7 +489,7 @@ class LoveLetter implements GameInterface
     protected function guardianEffect($params)
     {
         // Initial invocation without parameters, let player select other player.
-        if (!$params) {
+        if ($this->waitFor === self::WAIT_FOR_CHOOSE_CARD) {
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
             $this->waitFor = self::WAIT_FOR_CHOOSE_PLAYER;
             return;
@@ -516,12 +532,27 @@ class LoveLetter implements GameInterface
      */
     protected function priestEffect($params)
     {
-        if (!$params) {
+        static $enemyName = null;
+
+        if ($this->waitFor === self::WAIT_FOR_CHOOSE_CARD) {
             $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
             $this->waitFor = self::WAIT_FOR_CHOOSE_PLAYER;
             return;
         }
-        // TODO Implement functionality
+
+        if ($this->waitFor === self::WAIT_FOR_CHOOSE_PLAYER) {
+            $playerId = $params['id'];
+            $selectedPlayer = $this->getPlayerById($playerId);
+            $enemyName = $selectedPlayer->getName();
+            $player = $this->getActivePlayer();
+            $state = $player->getGameState();
+            $state['priestEffectVisibleCard'] = $selectedPlayer->getGameState()['cards'][0]['name'];
+            $player->setGameState($state);
+            $this->waitFor = self::WAIT_FOR_FINISH_LOOKING_AT_CARD;
+            $this->status = 'Merke dir diese Karte von '. $enemyName .' und drücke auf ok!';
+            return;
+        }
+
         $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
