@@ -563,14 +563,40 @@ class LoveLetter implements GameInterface
      */
     protected function baronEffect($params)
     {
-        if (!$params) {
-            $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
+        if ($this->waitFor === self::WAIT_FOR_CHOOSE_CARD) {
+            $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "'
+                . $this->activeCard['name'] . '" aus ...';
             $this->waitFor = self::WAIT_FOR_CHOOSE_PLAYER;
             return;
         }
-        // TODO Implement functionality
+
+        $id = $params['id'];
+        $activePlayer = $this->getActivePlayer();
+        $enemy = $this->getPlayerById($id);
+        switch ($activePlayer->getGameState()['cards'][0]['value'] <=> $enemy->getGameState()['cards'][0]['value']) {
+            case 0:
+                $this->status = 'Karten haben den gleichen Wert...keiner fliegt raus. ';
+                break;
+            case 1:
+                $this->outOfGamePlayers[] = $enemy->getId();
+                if ($this->gameIsFinished()) {
+                    return;
+                } else {
+                    $this->status = 'Die Karte von ' . $activePlayer->getName() . ' war höher! ';
+                }
+                break;
+            case -1:
+                $this->outOfGamePlayers[] = $activePlayer->getId();
+                if ($this->gameIsFinished()) {
+                    return;
+                } else {
+                    $this->status = 'Die Karte von ' . $enemy->getName() . ' war höher! ';
+                }
+                break;
+        }
+
         $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
-        $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
+        $this->status .= $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
     /**
@@ -621,6 +647,7 @@ class LoveLetter implements GameInterface
      */
     protected function countessEffect()
     {
+        // TODO Must be implemented clientside
         $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
