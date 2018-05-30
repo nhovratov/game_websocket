@@ -105,7 +105,14 @@ class Game implements MessageComponentInterface
             }
             switch ($msg['action']) {
                 case 'start':
-                    $this->game->start(clone $this->players);
+                    $players = clone $this->players;
+                    foreach ($players as $p) {
+                        if (!$p->getClient()) {
+                            $players->detach($p);
+                        }
+                    }
+                    $players->rewind();
+                    $this->game->start($players);
                     $this->globalState['status'] = 'Spiel läuft ...';
                     break;
                 default:
