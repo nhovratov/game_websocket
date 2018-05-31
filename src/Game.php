@@ -117,6 +117,7 @@ class Game implements MessageComponentInterface
                     break;
                 default:
                     $this->game->handleAction($msg['action'], $params);
+                    return;
             }
         }
 

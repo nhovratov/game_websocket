@@ -78,6 +78,7 @@ class LoveLetter implements GameInterface
     const WAIT_FOR_DISCARD_CARD = 'discardCard';
     const WAIT_FOR_START_NEW_GAME = 'startNewGame';
     const WAIT_FOR_FINISH_LOOKING_AT_CARD = 'finishLookingAtCard';
+    const WAIT_FOR_PLACE_MAID_CARD = 'placeMaidCard';
 
     const GUARDIAN_EFFECT_DEFAULT = [
         'name' => '',
@@ -165,6 +166,11 @@ class LoveLetter implements GameInterface
     /**
      * @var array
      */
+    protected $protectedPlayers = [];
+
+    /**
+     * @var array
+     */
     protected $outOfGamePlayers = [];
 
     /**
@@ -236,7 +242,9 @@ class LoveLetter implements GameInterface
                 $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
                 $this->handleEffect($this->activeCard);
                 break;
-            default:
+            case self::WAIT_FOR_PLACE_MAID_CARD:
+                $this->placeMaidCard();
+                break;
         }
         $this->updateState();
     }
@@ -258,6 +266,7 @@ class LoveLetter implements GameInterface
             'outOfGameCards' => $this->outOfGameCards,
             'openCards' => $this->openCards,
             'discardPile' => $visibleDiscardedCard,
+            'protectedPlayers' => $this->protectedPlayers,
             'outOfGamePlayers' => $this->outOfGamePlayers,
             'winner' => $this->winner,
             'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
@@ -321,7 +330,6 @@ class LoveLetter implements GameInterface
             $player->setGameState([]);
         }
         $this->players->rewind();
-        $this->updateState();
     }
 
     protected function drawCard()
@@ -332,9 +340,9 @@ class LoveLetter implements GameInterface
     protected function selectFirstPlayer($id)
     {
         $player = $this->getPlayerById($id);
+        //TODO Refactor this so there is a function to start next turn w/o arguments
         $this->startNewTurn($player);
         $this->waitFor = self::WAIT_FOR_CHOOSE_CARD;
-        $this->updateState();
     }
 
     protected function chooseCard($params)
@@ -344,10 +352,8 @@ class LoveLetter implements GameInterface
         $state = $player->getGameState();
         $this->activeCard = array_splice($state['cards'], $index, 1)[0];
         $this->openCards[] = $this->activeCard;
-        $this->activeCard['effectFinished'] = false;
-        $this->handleEffect($this->activeCard);
         $player->setGameState($state);
-        $this->updateState();
+        $this->handleEffect($this->activeCard);
     }
 
     protected function discardActiveCard()
@@ -356,7 +362,6 @@ class LoveLetter implements GameInterface
         $activePlayer = $this->getNextPlayer();
         $this->activeCard = [];
         $this->startNewTurn($activePlayer);
-        $this->updateState();
     }
 
     /**
@@ -365,6 +370,13 @@ class LoveLetter implements GameInterface
     protected function startNewTurn($player)
     {
         $this->playerTurn = $player->getId();
+        if (in_array($player->getId(), $this->protectedPlayers)) {
+            $state = $player->getGameState();
+            $this->discardPile[] = array_splice($state['openEffectCards'], 0, 1)[0];
+            $player->setGameState($state);
+            $key = array_search($player->getId(), $this->protectedPlayers);
+            array_splice($this->protectedPlayers, $key, 1);
+        }
         $this->drawCardForActivePlayer();
         $this->waitFor = self::WAIT_FOR_CHOOSE_CARD;
         $this->status = "{$player->getName()} ist dran ...";
@@ -376,6 +388,16 @@ class LoveLetter implements GameInterface
         $state = $player->getGameState();
         $state['cards'][] = $this->drawCard();
         $player->setGameState($state);
+    }
+
+    protected function placeMaidCard()
+    {
+        $player = $this->getActivePlayer();
+        $state = $player->getGameState();
+        $state['openEffectCards'][] = array_splice($this->openCards, 0, 1)[0];
+        $player->setGameState($state);
+        $nextPlayer = $this->getNextPlayer();
+        $this->startNewTurn($nextPlayer);
     }
 
     protected function getActivePlayer()
@@ -443,7 +465,6 @@ class LoveLetter implements GameInterface
             $this->winner = $victoriousPlayer->getId();
             $this->status = $victoriousPlayer->getName() . " hat gewonnen!";
             $this->waitFor = 'startNewGame';
-            $this->updateState();
             return true;
         } else {
             return false;
@@ -604,10 +625,10 @@ class LoveLetter implements GameInterface
      */
     protected function maidEffect()
     {
-        // You are protected
-        // TODO Implement functionality
-        $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
-        $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
+        $player = $this->getActivePlayer();
+        $this->protectedPlayers[] = $player->getId();
+        $this->waitFor = self::WAIT_FOR_PLACE_MAID_CARD;
+        $this->status = $this->getActivePlayer()->getName() . ' ist für eine Runde geschützt und muss seine Karte vor sich offen hinlegen ...';
     }
 
     /**
