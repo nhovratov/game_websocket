@@ -71,11 +71,11 @@ class LoveLetter implements GameInterface
     const COUNTESSCOUNT = 1;
     const PRINCESSCOUNT = 1;
 
-    const WAIT_FOR_FIRST_PLAYER_SELECT = 'firstPlayerSelect';
+    const WAIT_FOR_SELECT_FIRST_PLAYER = 'selectFirstPlayer';
     const WAIT_FOR_CHOOSE_CARD = 'chooseCard';
     const WAIT_FOR_CHOOSE_PLAYER = 'choosePlayer';
     const WAIT_FOR_CHOOSE_GUARDIAN_EFFECT_CARD = 'chooseGuardianEffectCard';
-    const WAIT_FOR_DISCARD_CARD = 'discardCard';
+    const WAIT_FOR_CONFIRM_DISCARD_CARD = 'confirmDiscardCard';
     const WAIT_FOR_START_NEW_GAME = 'startNewGame';
     const WAIT_FOR_FINISH_LOOKING_AT_CARD = 'finishLookingAtCard';
     const WAIT_FOR_PLACE_MAID_CARD = 'placeMaidCard';
@@ -216,35 +216,33 @@ class LoveLetter implements GameInterface
             }
         }
         $this->status = 'Host wählt ersten Spieler...';
-        $this->waitFor = self::WAIT_FOR_FIRST_PLAYER_SELECT;
+        $this->waitFor = self::WAIT_FOR_SELECT_FIRST_PLAYER;
         $this->updateState();
     }
 
     public function handleAction($action, $params = [])
     {
         switch ($action) {
-            case 'selectFirstPlayer':
-                $this->setupFirstTurn($params['id']);
+            case self::WAIT_FOR_CHOOSE_CARD:
+                $this->activateCard($params);
                 break;
-            case 'chooseCard':
-                $this->chooseCard($params);
-                break;
-            case 'selectPlayerForEffect':
-                $this->handleEffect($this->activeCard, $params);
-                break;
-            case 'discardActiveCard':
+            case self::WAIT_FOR_CONFIRM_DISCARD_CARD:
                 $this->discardActiveCard();
                 break;
-            case 'selectGuardianEffectCard':
+            case self::WAIT_FOR_CHOOSE_PLAYER:
                 $this->handleEffect($this->activeCard, $params);
                 break;
-            case 'finishLookingAtCard':
-                $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
+            case self::WAIT_FOR_CHOOSE_GUARDIAN_EFFECT_CARD:
+                $this->handleEffect($this->activeCard, $params);
+                break;
+            case self::WAIT_FOR_FINISH_LOOKING_AT_CARD:
                 $this->handleEffect($this->activeCard);
                 break;
             case self::WAIT_FOR_PLACE_MAID_CARD:
                 $this->placeMaidCard();
                 break;
+            case self::WAIT_FOR_SELECT_FIRST_PLAYER:
+                $this->setupFirstTurn($params['id']);
         }
         $this->updateState();
     }
@@ -346,7 +344,7 @@ class LoveLetter implements GameInterface
         $this->status = "{$player->getName()} ist dran ...";
     }
 
-    protected function chooseCard($params)
+    protected function activateCard($params)
     {
         $index = $params['index'];
         $player = $this->getActivePlayer();
@@ -537,7 +535,7 @@ class LoveLetter implements GameInterface
                 $this->status = $card . '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
             }
         }
-        $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
+        $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
         $this->status =
             $card . '! Falsch geraten! '
@@ -571,7 +569,7 @@ class LoveLetter implements GameInterface
             return;
         }
 
-        $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
+        $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
@@ -613,7 +611,7 @@ class LoveLetter implements GameInterface
                 break;
         }
 
-        $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
+        $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->status .= $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
@@ -640,7 +638,7 @@ class LoveLetter implements GameInterface
             return;
         }
         // TODO Implement functionality
-        $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
+        $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
@@ -656,7 +654,7 @@ class LoveLetter implements GameInterface
             return;
         }
         // TODO Implement functionality
-        $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
+        $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
@@ -666,7 +664,7 @@ class LoveLetter implements GameInterface
     protected function countessEffect()
     {
         // TODO Must be implemented clientside
-        $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
+        $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
@@ -677,7 +675,7 @@ class LoveLetter implements GameInterface
     {
         // You are out
         // TODO Implement functionality
-        $this->waitFor = self::WAIT_FOR_DISCARD_CARD;
+        $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
