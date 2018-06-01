@@ -224,7 +224,7 @@ class LoveLetter implements GameInterface
     {
         switch ($action) {
             case 'selectFirstPlayer':
-                $this->selectFirstPlayer($params['id']);
+                $this->setupFirstTurn($params['id']);
                 break;
             case 'chooseCard':
                 $this->chooseCard($params);
@@ -247,6 +247,30 @@ class LoveLetter implements GameInterface
                 break;
         }
         $this->updateState();
+    }
+
+    public function updateState()
+    {
+        if (!$this->players) {
+            return;
+        }
+        $playerinfo = $this->getPlayers();
+        /** @var Player $player */
+        foreach ($this->players as $player) {
+            if (!$player->getClient()) {
+                continue;
+            }
+            $msg = [
+                'dataType' => 'game',
+                'global' => $this->getGlobalState(),
+                'local' => $player->getGameState()
+            ];
+            if ($playerinfo) {
+                $msg['global']['players'] = $playerinfo;
+            }
+            $player->getClient()->send(json_encode($msg));
+        }
+        $this->players->rewind();
     }
 
     public function getGlobalState()
@@ -272,30 +296,6 @@ class LoveLetter implements GameInterface
             'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
             'guardianEffectChosenPlayer' => $this->guardianEffect['name'],
         ];
-    }
-
-    public function updateState()
-    {
-        if (!$this->players) {
-            return;
-        }
-        $playerinfo = $this->getPlayers();
-        /** @var Player $player */
-        foreach ($this->players as $player) {
-            if (!$player->getClient()) {
-                continue;
-            }
-            $msg = [
-                'dataType' => 'game',
-                'global' => $this->getGlobalState(),
-                'local' => $player->getGameState()
-            ];
-            if ($playerinfo) {
-                $msg['global']['players'] = $playerinfo;
-            }
-            $player->getClient()->send(json_encode($msg));
-        }
-        $this->players->rewind();
     }
 
     /**
@@ -337,12 +337,13 @@ class LoveLetter implements GameInterface
         return array_pop($this->stack);
     }
 
-    protected function selectFirstPlayer($id)
+    protected function setupFirstTurn($id)
     {
         $player = $this->getPlayerById($id);
-        //TODO Refactor this so there is a function to start next turn w/o arguments
-        $this->startNewTurn($player);
+        $this->playerTurn = $player->getId();
+        $this->drawCardForActivePlayer();
         $this->waitFor = self::WAIT_FOR_CHOOSE_CARD;
+        $this->status = "{$player->getName()} ist dran ...";
     }
 
     protected function chooseCard($params)
@@ -359,16 +360,13 @@ class LoveLetter implements GameInterface
     protected function discardActiveCard()
     {
         $this->discardPile[] = array_splice($this->openCards, 0, 1)[0];
-        $activePlayer = $this->getNextPlayer();
         $this->activeCard = [];
-        $this->startNewTurn($activePlayer);
+        $this->nextTurn();
     }
 
-    /**
-     * @param Player $player
-     */
-    protected function startNewTurn($player)
+    protected function nextTurn()
     {
+        $player = $this->getNextPlayer();
         $this->playerTurn = $player->getId();
         if (in_array($player->getId(), $this->protectedPlayers)) {
             $state = $player->getGameState();
@@ -396,8 +394,7 @@ class LoveLetter implements GameInterface
         $state = $player->getGameState();
         $state['openEffectCards'][] = array_splice($this->openCards, 0, 1)[0];
         $player->setGameState($state);
-        $nextPlayer = $this->getNextPlayer();
-        $this->startNewTurn($nextPlayer);
+        $this->nextTurn();
     }
 
     protected function getActivePlayer()
