@@ -74,6 +74,7 @@ class LoveLetter implements GameInterface
     const WAIT_FOR_SELECT_FIRST_PLAYER = 'selectFirstPlayer';
     const WAIT_FOR_CHOOSE_CARD = 'chooseCard';
     const WAIT_FOR_CHOOSE_PLAYER = 'choosePlayer';
+    const WAIT_FOR_CHOOSE_ANY_PLAYER = 'chooseAnyPlayer';
     const WAIT_FOR_CHOOSE_GUARDIAN_EFFECT_CARD = 'chooseGuardianEffectCard';
     const WAIT_FOR_CONFIRM_DISCARD_CARD = 'confirmDiscardCard';
     const WAIT_FOR_START_NEW_GAME = 'startNewGame';
@@ -224,25 +225,28 @@ class LoveLetter implements GameInterface
     {
         switch ($action) {
             case self::WAIT_FOR_CHOOSE_CARD:
-                $this->activateCard($params);
+                $this->activateCardAction($params);
                 break;
             case self::WAIT_FOR_CONFIRM_DISCARD_CARD:
-                $this->discardActiveCard();
+                $this->discardActiveCardAction();
                 break;
             case self::WAIT_FOR_CHOOSE_PLAYER:
-                $this->handleEffect($this->activeCard, $params);
+                $this->handleEffectAction($params);
                 break;
             case self::WAIT_FOR_CHOOSE_GUARDIAN_EFFECT_CARD:
-                $this->handleEffect($this->activeCard, $params);
+                $this->handleEffectAction($params);
                 break;
             case self::WAIT_FOR_FINISH_LOOKING_AT_CARD:
-                $this->handleEffect($this->activeCard);
+                $this->handleEffectAction();
                 break;
             case self::WAIT_FOR_PLACE_MAID_CARD:
-                $this->placeMaidCard();
+                $this->placeMaidCardAction();
+                break;
+            case self::WAIT_FOR_CHOOSE_ANY_PLAYER:
+                $this->handleEffectAction();
                 break;
             case self::WAIT_FOR_SELECT_FIRST_PLAYER:
-                $this->setupFirstTurn($params['id']);
+                $this->setupFirstTurnAction($params);
         }
         $this->updateState();
     }
@@ -271,6 +275,42 @@ class LoveLetter implements GameInterface
         $this->players->rewind();
     }
 
+    protected function setupFirstTurnAction($params)
+    {
+        $player = $this->getPlayerById($params['id']);
+        $this->playerTurn = $player->getId();
+        $this->drawCardForActivePlayer();
+        $this->waitFor = self::WAIT_FOR_CHOOSE_CARD;
+        $this->status = "{$player->getName()} ist dran ...";
+    }
+
+    protected function activateCardAction($params)
+    {
+        $index = $params['index'];
+        $player = $this->getActivePlayer();
+        $state = $player->getGameState();
+        $this->activeCard = array_splice($state['cards'], $index, 1)[0];
+        $this->openCards[] = $this->activeCard;
+        $player->setGameState($state);
+        $this->handleEffectAction();
+    }
+
+    protected function discardActiveCardAction()
+    {
+        $this->discardPile[] = array_splice($this->openCards, 0, 1)[0];
+        $this->activeCard = [];
+        $this->nextTurn();
+    }
+
+    protected function placeMaidCardAction()
+    {
+        $player = $this->getActivePlayer();
+        $state = $player->getGameState();
+        $state['openEffectCards'][] = array_splice($this->openCards, 0, 1)[0];
+        $player->setGameState($state);
+        $this->nextTurn();
+    }
+
     public function getGlobalState()
     {
         $visibleDiscardedCard = [];
@@ -294,6 +334,37 @@ class LoveLetter implements GameInterface
             'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
             'guardianEffectChosenPlayer' => $this->guardianEffect['name'],
         ];
+    }
+
+    protected function gameIsFinished()
+    {
+        if (count($this->outOfGamePlayers) === $this->players->count() - 1) {
+            $this->gameFinished = true;
+            $this->gameStarted = false;
+            $victoriousPlayer = $this->getNextPlayer();
+            $this->winner = $victoriousPlayer->getId();
+            $this->status = $victoriousPlayer->getName() . " hat gewonnen!";
+            $this->waitFor = 'startNewGame';
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    protected function nextTurn()
+    {
+        $player = $this->getNextPlayer();
+        $this->playerTurn = $player->getId();
+        if (in_array($player->getId(), $this->protectedPlayers)) {
+            $state = $player->getGameState();
+            $this->discardPile[] = array_splice($state['openEffectCards'], 0, 1)[0];
+            $player->setGameState($state);
+            $key = array_search($player->getId(), $this->protectedPlayers);
+            array_splice($this->protectedPlayers, $key, 1);
+        }
+        $this->drawCardForActivePlayer();
+        $this->waitFor = self::WAIT_FOR_CHOOSE_CARD;
+        $this->status = "{$player->getName()} ist dran ...";
     }
 
     /**
@@ -330,54 +401,6 @@ class LoveLetter implements GameInterface
         $this->players->rewind();
     }
 
-    protected function drawCard()
-    {
-        return array_pop($this->stack);
-    }
-
-    protected function setupFirstTurn($id)
-    {
-        $player = $this->getPlayerById($id);
-        $this->playerTurn = $player->getId();
-        $this->drawCardForActivePlayer();
-        $this->waitFor = self::WAIT_FOR_CHOOSE_CARD;
-        $this->status = "{$player->getName()} ist dran ...";
-    }
-
-    protected function activateCard($params)
-    {
-        $index = $params['index'];
-        $player = $this->getActivePlayer();
-        $state = $player->getGameState();
-        $this->activeCard = array_splice($state['cards'], $index, 1)[0];
-        $this->openCards[] = $this->activeCard;
-        $player->setGameState($state);
-        $this->handleEffect($this->activeCard);
-    }
-
-    protected function discardActiveCard()
-    {
-        $this->discardPile[] = array_splice($this->openCards, 0, 1)[0];
-        $this->activeCard = [];
-        $this->nextTurn();
-    }
-
-    protected function nextTurn()
-    {
-        $player = $this->getNextPlayer();
-        $this->playerTurn = $player->getId();
-        if (in_array($player->getId(), $this->protectedPlayers)) {
-            $state = $player->getGameState();
-            $this->discardPile[] = array_splice($state['openEffectCards'], 0, 1)[0];
-            $player->setGameState($state);
-            $key = array_search($player->getId(), $this->protectedPlayers);
-            array_splice($this->protectedPlayers, $key, 1);
-        }
-        $this->drawCardForActivePlayer();
-        $this->waitFor = self::WAIT_FOR_CHOOSE_CARD;
-        $this->status = "{$player->getName()} ist dran ...";
-    }
-
     protected function drawCardForActivePlayer()
     {
         $player = $this->getActivePlayer();
@@ -386,15 +409,12 @@ class LoveLetter implements GameInterface
         $player->setGameState($state);
     }
 
-    protected function placeMaidCard()
+    protected function drawCard()
     {
-        $player = $this->getActivePlayer();
-        $state = $player->getGameState();
-        $state['openEffectCards'][] = array_splice($this->openCards, 0, 1)[0];
-        $player->setGameState($state);
-        $this->nextTurn();
+        return array_pop($this->stack);
     }
 
+    // TODO Maybe cache the active player once per turn...
     protected function getActivePlayer()
     {
         return $this->getPlayerById($this->playerTurn);
@@ -451,24 +471,9 @@ class LoveLetter implements GameInterface
         return false;
     }
 
-    protected function gameIsFinished()
+    protected function handleEffectAction($params = [])
     {
-        if (count($this->outOfGamePlayers) === $this->players->count() - 1) {
-            $this->gameFinished = true;
-            $this->gameStarted = false;
-            $victoriousPlayer = $this->getNextPlayer();
-            $this->winner = $victoriousPlayer->getId();
-            $this->status = $victoriousPlayer->getName() . " hat gewonnen!";
-            $this->waitFor = 'startNewGame';
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    protected function handleEffect($card, $params = [])
-    {
-        switch ($card['name']) {
+        switch ($this->activeCard['name']) {
             case 'Wächterin':
                 $this->guardianEffect($params);
                 break;
@@ -632,12 +637,11 @@ class LoveLetter implements GameInterface
      */
     protected function princeEffect($params)
     {
-        if (!$params) {
-            $this->status = $this->getActivePlayer()->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
-            $this->waitFor = self::WAIT_FOR_CHOOSE_PLAYER;
+        if ($this->waitFor === self::WAIT_FOR_CHOOSE_CARD) {
+            $this->status = $this->getActivePlayer()->getName() . ' sucht Spieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
+            $this->waitFor = self::WAIT_FOR_CHOOSE_ANY_PLAYER;
             return;
         }
-        // TODO Implement functionality
         $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
