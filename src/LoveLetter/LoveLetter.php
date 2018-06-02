@@ -157,11 +157,6 @@ class LoveLetter implements GameInterface
     /**
      * @var array
      */
-    protected $openCards = [];
-
-    /**
-     * @var array
-     */
     protected $discardPile = [];
 
     /**
@@ -293,14 +288,12 @@ class LoveLetter implements GameInterface
         $cards = $gameState->getCards();
         $this->transferCard($cards, $this->activeCard, $index);
         $gameState->setCards($cards);
-        //TODO Why do we have active cards and open cards ?
-        $this->openCards[] = $this->activeCard;
         $this->handleEffectAction();
     }
 
     protected function discardActiveCardAction()
     {
-        $this->transferCard($this->openCards, $this->discardPile);
+        $this->discardPile[] = $this->activeCard;
         $this->activeCard = null;
         $this->nextTurn();
     }
@@ -309,9 +302,8 @@ class LoveLetter implements GameInterface
     {
         /** @var PlayerState $gameState */
         $gameState = $this->activePlayer->getGameState();
-        $openEffectCards = $gameState->getOpenEffectCards();
-        $this->transferCard($this->openCards, $openEffectCards);
-        $gameState->setOpenEffectCards($openEffectCards);
+        $gameState->addOpenEffectCard($this->activeCard);
+        $this->activeCard = null;
         $this->nextTurn();
     }
 
@@ -331,7 +323,6 @@ class LoveLetter implements GameInterface
             'status' => $this->status,
             'activeCard' => $this->activeCard,
             'outOfGameCards' => $this->outOfGameCards,
-            'openCards' => $this->openCards,
             'discardPile' => $visibleDiscardedCard,
             'protectedPlayers' => $this->protectedPlayers,
             'outOfGamePlayers' => $this->outOfGamePlayers,
@@ -399,7 +390,6 @@ class LoveLetter implements GameInterface
         $this->discardPile = [];
         $this->outOfGameCards = [];
         $this->activeCard = null;
-        $this->openCards = [];
         $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
         $this->winner = '';
         $this->outOfGamePlayers = [];

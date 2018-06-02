@@ -65,7 +65,6 @@ class LoveLetterTest extends TestCase
         $state = $game->getGlobalState();
         $this->assertEquals($game::WAIT_FOR_CHOOSE_PLAYER, $state['waitFor']);
         $this->assertEquals('Wächterin', $state['activeCard']['name']);
-        $this->assertEquals('Wächterin', $state['openCards'][0]['name']);
 
         // Select Mikel for Effect card
         $game->handleAction('choosePlayer', ['id' => 2]);
@@ -80,7 +79,6 @@ class LoveLetterTest extends TestCase
         // John was wrong so he discards his card
         $game->handleAction('confirmDiscardCard');
         $state = $game->getGlobalState();
-        $this->assertCount(0, $state['openCards']);
         $this->assertEmpty($state['activeCard']);
         $this->assertEquals(2, $state['playerTurn']);
         $this->assertEquals($game::WAIT_FOR_CHOOSE_CARD, $state['waitFor']);
