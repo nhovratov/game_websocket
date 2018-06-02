@@ -715,14 +715,32 @@ class LoveLetter implements GameInterface
      */
     protected function kingEffect($params)
     {
-        if (!$params) {
+        if ($this->waitFor === self::WAIT_FOR_CHOOSE_CARD) {
             $this->status = $this->activePlayer->getName() . ' sucht Mitspieler für Karteneffekt "' . $this->activeCard['name'] . '" aus ...';
             $this->waitFor = self::WAIT_FOR_CHOOSE_PLAYER;
             return;
         }
-        // TODO Implement functionality
+
+        $chosenPlayer = $this->getPlayerById($params['id']);
+
+        /** @var PlayerState $chosenPlayerState */
+        $chosenPlayerState = $chosenPlayer->getGameState();
+        /** @var PlayerState $activePlayerState */
+        $activePlayerState = $this->activePlayer->getGameState();
+
+        // Swap cards
+        $chosenPlayerCards = $chosenPlayerState->getCards();
+        $activePlayerCards = $activePlayerState->getCards();
+        $chosenPlayerCard = $chosenPlayerCards[0];
+        $activePlayerCard = $activePlayerCards[0];
+        $chosenPlayerCards[0] = $activePlayerCard;
+        $activePlayerCards[0] = $chosenPlayerCard;
+        $chosenPlayerState->setCards($chosenPlayerCards);
+        $activePlayerState->setCards($activePlayerCards);
+
         $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
-        $this->status = $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
+        $this->status = $chosenPlayer->getName() . ' und ' . $this->activePlayer->getName() . ' haben Karten getauscht. ';
+        $this->status .= $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
     /**
