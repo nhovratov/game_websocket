@@ -177,6 +177,7 @@ class LoveLetter implements GameInterface
     /**
      * @var string
      */
+    // TODO There can be more than one winner
     protected $winner = '';
 
     /**
@@ -306,6 +307,7 @@ class LoveLetter implements GameInterface
     {
         $player = $this->getActivePlayer();
         $state = $player->getGameState();
+        $state['openEffectCards'] = [];
         $this->transferCard($this->openCards, $state['openEffectCards']);
         $player->setGameState($state);
         $this->nextTurn();
@@ -338,6 +340,8 @@ class LoveLetter implements GameInterface
 
     protected function gameIsFinished()
     {
+        // TODO Check if stack is empty, if so player with highest card wins
+        // If there cards have equal values all player with that value win the game
         if (count($this->outOfGamePlayers) === $this->players->count() - 1) {
             $this->gameFinished = true;
             $this->gameStarted = false;
@@ -353,6 +357,7 @@ class LoveLetter implements GameInterface
 
     protected function nextTurn()
     {
+        $this->gameIsFinished();
         $player = $this->getNextPlayer();
         $this->playerTurn = $player->getId();
         if (in_array($player->getId(), $this->protectedPlayers)) {
@@ -411,15 +416,23 @@ class LoveLetter implements GameInterface
 
     protected function drawCard()
     {
-        return array_pop($this->stack);
+        $card = array_pop($this->stack);
+        if (is_null($card)) {
+            var_dump($this->reserve);
+            return array_pop($this->reserve);
+        } else {
+            return $card;
+        }
     }
 
     protected function transferCard(&$from, &$to, $index = 0)
     {
         if (is_null($to) || is_string(key($to))) {
             $to = array_splice($from, $index, 1)[0];
+            return $to;
         } else {
             $to[] = array_splice($from, $index, 1)[0];
+            return $to[count($to) - 1];
         }
     }
 
@@ -652,13 +665,16 @@ class LoveLetter implements GameInterface
             return;
         }
 
-        if ($this->waitFor === self::WAIT_FOR_CHOOSE_ANY_PLAYER) {
-            $chosenPlayer = $this->getPlayerById($params['id']);
-
-        }
+        $chosenPlayer = $this->getPlayerById($params['id']);
+        $state = $chosenPlayer->getGameState();
+        // TODO Check if princess was discarded
+        $card = $this->transferCard($state['cards'], $this->discardPile);
+        $state['cards'][] = $this->drawCard();
+        $chosenPlayer->setGameState($state);
+        $this->status = 'Die Karte ' . $card['name'] . ' von ' . $chosenPlayer->getName() . ' wurde abgeworfen und eine neue Karte wurde gezogen. ';
 
         $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
-        $this->status = $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
+        $this->status .= $this->getActivePlayer()->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
     /**
