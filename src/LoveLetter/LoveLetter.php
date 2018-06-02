@@ -383,7 +383,7 @@ class LoveLetter implements GameInterface
 
     protected function nextTurn()
     {
-        if($this->gameIsFinished()) {
+        if ($this->gameIsFinished()) {
             return;
         }
         $this->activePlayer = $this->getNextPlayer();
@@ -700,12 +700,17 @@ class LoveLetter implements GameInterface
         /** @var PlayerState $gameState */
         $gameState = $chosenPlayer->getGameState();
         $cards = $gameState->getCards();
-        // TODO Check if princess was discarded
         $card = $this->transferCard($cards, $this->discardPile);
-        $gameState->setCards($cards);
-        $gameState->addCard($this->drawCard(true));
+        $this->status = 'Die Karte ' . $card['name'] . ' von ' . $chosenPlayer->getName() . ' wurde abgeworfen ';
+        if ($card['name'] === 'Prinzessin') {
+            $this->outOfGamePlayers[] = $chosenPlayer->getId();
+            $this->status .= 'und ist  deshalb ausgeschieden. ';
+        } else {
+            $gameState->setCards($cards);
+            $gameState->addCard($this->drawCard(true));
+            $this->status .= 'und eine neue Karte wurde gezogen. ';
+        }
         $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
-        $this->status = 'Die Karte ' . $card['name'] . ' von ' . $chosenPlayer->getName() . ' wurde abgeworfen und eine neue Karte wurde gezogen. ';
         $this->status .= $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
@@ -748,7 +753,6 @@ class LoveLetter implements GameInterface
      */
     protected function countessEffect()
     {
-        // TODO Must be implemented clientside
         $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->status = $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
@@ -758,8 +762,7 @@ class LoveLetter implements GameInterface
      */
     protected function princessEffect()
     {
-        // You are out
-        // TODO Implement functionality
+        $this->outOfGamePlayers[] = $this->activePlayer->getId();
         $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->status = $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
