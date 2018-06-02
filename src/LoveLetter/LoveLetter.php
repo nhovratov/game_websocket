@@ -207,9 +207,10 @@ class LoveLetter implements GameInterface
         $this->gameStarted = true;
         /** @var Player $player */
         foreach ($this->players as $player) {
-            $currentState = $player->getGameState();
-            $currentState['cards'][] = $this->drawCard();
-            $player->setGameState($currentState);
+            $player->setGameState(new PlayerState());
+            $gameState = new PlayerState();
+            $gameState->addCard($this->drawCard());
+            $player->setGameState($gameState);
         }
         $this->reserve[] = $this->drawCard();
         if ($this->players->count() === 2) {
@@ -266,7 +267,7 @@ class LoveLetter implements GameInterface
             $msg = [
                 'dataType' => 'game',
                 'global' => $this->getGlobalState(),
-                'local' => $player->getGameState()
+                'local' => $player->getGameState()->getState()
             ];
             if ($playerinfo) {
                 $msg['global']['players'] = $playerinfo;
@@ -287,10 +288,13 @@ class LoveLetter implements GameInterface
     protected function activateCardAction($params)
     {
         $index = $params['index'];
-        $state = $this->activePlayer->getGameState();
-        $this->transferCard($state['cards'], $this->activeCard, $index);
+        /** @var PlayerState $gameState */
+        $gameState = $this->activePlayer->getGameState();
+        $cards = $gameState->getCards();
+        $this->transferCard($cards, $this->activeCard, $index);
+        $gameState->setCards($cards);
+        //TODO Why do we have active cards and open cards ?
         $this->openCards[] = $this->activeCard;
-        $this->activePlayer->setGameState($state);
         $this->handleEffectAction();
     }
 
@@ -303,10 +307,11 @@ class LoveLetter implements GameInterface
 
     protected function placeMaidCardAction()
     {
-        $state = $this->activePlayer->getGameState();
-        $state['openEffectCards'] = [];
-        $this->transferCard($this->openCards, $state['openEffectCards']);
-        $this->activePlayer->setGameState($state);
+        /** @var PlayerState $gameState */
+        $gameState = $this->activePlayer->getGameState();
+        $openEffectCards = $gameState->getOpenEffectCards();
+        $this->transferCard($this->openCards, $openEffectCards);
+        $gameState->setOpenEffectCards($openEffectCards);
         $this->nextTurn();
     }
 
@@ -317,7 +322,7 @@ class LoveLetter implements GameInterface
         if ($numDicardedCards > 0) {
             $visibleDiscardedCard = [$this->discardPile[$numDicardedCards - 1]];
         }
-        $playerTurn = $this->activePlayer ? $this->activePlayer->getId() :  '';
+        $playerTurn = $this->activePlayer ? $this->activePlayer->getId() : '';
         return [
             'gameStarted' => $this->gameStarted,
             'gameFinished' => $this->gameFinished,
@@ -358,9 +363,11 @@ class LoveLetter implements GameInterface
         $this->gameIsFinished();
         $this->activePlayer = $this->getNextPlayer();
         if (in_array($this->activePlayer->getId(), $this->protectedPlayers)) {
-            $state = $this->activePlayer->getGameState();
-            $this->transferCard($state['openEffectCards'], $this->discardPile);
-            $this->activePlayer->setGameState($state);
+            /** @var PlayerState $gameState */
+            $gameState = $this->activePlayer->getGameState();
+            $openEffectCards = $gameState->getOpenEffectCards();
+            $this->transferCard($openEffectCards, $this->discardPile);
+            $gameState->setOpenEffectCards($openEffectCards);
             $key = array_search($this->activePlayer->getId(), $this->protectedPlayers);
             array_splice($this->protectedPlayers, $key, 1);
         }
@@ -399,16 +406,18 @@ class LoveLetter implements GameInterface
         $this->gameFinished = false;
         $this->activePlayer = null;
         foreach ($this->players as $player) {
-            $player->setGameState([]);
+            if ($player->getGameState()) {
+                $player->getGameState()->reset();
+            }
         }
         $this->players->rewind();
     }
 
     protected function drawCardForActivePlayer()
     {
-        $state = $this->activePlayer->getGameState();
-        $state['cards'][] = $this->drawCard();
-        $this->activePlayer->setGameState($state);
+        /** @var PlayerState $gameState */
+        $gameState = $this->activePlayer->getGameState();
+        $gameState->addCard($this->drawCard());
     }
 
     protected function drawCard()
@@ -541,11 +550,13 @@ class LoveLetter implements GameInterface
         // Check if player was right, then the other player is out.
         $chosenPlayer = $this->getPlayerById($this->guardianEffect['id']);
         $card = $params['card'];
+        /** @var PlayerState $chosenPlayerState */
         $chosenPlayerState = $chosenPlayer->getGameState();
-        if ($card === $chosenPlayerState['cards'][0]['name']) {
+        if ($card === $chosenPlayerState->getCards()[0]['name']) {
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
-            $this->transferCard($chosenPlayerState['cards'], $this->discardPile, 0);
-            $chosenPlayer->setGameState($chosenPlayerState);
+            $cards = $chosenPlayerState->getCards();
+            $this->transferCard($cards, $this->discardPile, 0);
+            $chosenPlayerState->setCards($cards);
             if ($this->gameIsFinished()) {
                 return;
             } else {
@@ -577,9 +588,11 @@ class LoveLetter implements GameInterface
             $playerId = $params['id'];
             $selectedPlayer = $this->getPlayerById($playerId);
             $enemyName = $selectedPlayer->getName();
-            $state = $this->activePlayer->getGameState();
-            $state['priestEffectVisibleCard'] = $selectedPlayer->getGameState()['cards'][0]['name'];
-            $this->activePlayer->setGameState($state);
+            /** @var PlayerState $activePlayerGameState */
+            $activePlayerGameState = $this->activePlayer->getGameState();
+            /** @var PlayerState $selectedPlayerGameState */
+            $selectedPlayerGameState = $selectedPlayer->getGameState();
+            $activePlayerGameState->setPriestEffectVisibleCard($selectedPlayerGameState->getCards()[0]['name']);
             $this->waitFor = self::WAIT_FOR_FINISH_LOOKING_AT_CARD;
             $this->status = 'Merke dir diese Karte von ' . $enemyName . ' und drücke auf ok!';
             return;
@@ -604,7 +617,11 @@ class LoveLetter implements GameInterface
 
         $id = $params['id'];
         $enemy = $this->getPlayerById($id);
-        switch ($this->activePlayer->getGameState()['cards'][0]['value'] <=> $enemy->getGameState()['cards'][0]['value']) {
+        /** @var PlayerState $activePlayerState */
+        $activePlayerState = $this->activePlayer->getGameState();
+        /** @var PlayerState $enemyPlayerState */
+        $enemyPlayerState = $enemy->getGameState();
+        switch ($activePlayerState->getCards()[0]['value'] <=> $enemyPlayerState->getCards()[0]['value']) {
             case 0:
                 $this->status = 'Karten haben den gleichen Wert...keiner fliegt raus. ';
                 break;
@@ -653,14 +670,15 @@ class LoveLetter implements GameInterface
         }
 
         $chosenPlayer = $this->getPlayerById($params['id']);
-        $state = $chosenPlayer->getGameState();
+        /** @var PlayerState $gameState */
+        $gameState = $chosenPlayer->getGameState();
+        $cards = $gameState->getCards();
         // TODO Check if princess was discarded
-        $card = $this->transferCard($state['cards'], $this->discardPile);
-        $state['cards'][] = $this->drawCard();
-        $chosenPlayer->setGameState($state);
-        $this->status = 'Die Karte ' . $card['name'] . ' von ' . $chosenPlayer->getName() . ' wurde abgeworfen und eine neue Karte wurde gezogen. ';
-
+        $card = $this->transferCard($cards, $this->discardPile);
+        $gameState->setCards($cards);
+        $gameState->addCard($this->drawCard());
         $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
+        $this->status = 'Die Karte ' . $card['name'] . ' von ' . $chosenPlayer->getName() . ' wurde abgeworfen und eine neue Karte wurde gezogen. ';
         $this->status .= $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 

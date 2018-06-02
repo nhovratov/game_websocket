@@ -9,15 +9,29 @@
 namespace MyApp;
 
 
+use Ratchet\ConnectionInterface;
+
 class Player
 {
+    /**
+     * @var ConnectionInterface
+     */
     protected $client;
 
-    protected $id;
+    /**
+     * @var int
+     */
+    protected $id = 0;
 
-    protected $gameState;
+    /**
+     * @var StateInterface
+     */
+    protected $gameState = null;
 
-    protected $name;
+    /**
+     * @var string
+     */
+    protected $name = '';
 
     public function __construct($client, $id)
     {
@@ -33,17 +47,20 @@ class Player
         ];
     }
 
-    public function getGameState()
+    /**
+     * @param StateInterface $gameState
+     */
+    public function setGameState(StateInterface $gameState)
     {
-        return $this->gameState;
+        $this->gameState = $gameState;
     }
 
     /**
-     * @param mixed $gameState
+     * @return StateInterface
      */
-    public function setGameState($gameState)
+    public function getGameState()
     {
-        $this->gameState = $gameState;
+        return $this->gameState;
     }
 
     /**
@@ -55,7 +72,7 @@ class Player
     }
 
     /**
-     * @return mixed
+     * @return ConnectionInterface
      */
     public function getClient()
     {
@@ -68,7 +85,7 @@ class Player
     }
 
     /**
-     * @param mixed $client
+     * @param ConnectionInterface $client
      */
     public function setClient($client)
     {

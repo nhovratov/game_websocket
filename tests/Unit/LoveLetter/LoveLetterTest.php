@@ -45,8 +45,8 @@ class LoveLetterTest extends TestCase
         $this->assertEquals($game::WAIT_FOR_SELECT_FIRST_PLAYER, $state['waitFor']);
         foreach ($players as $player) {
             $playerState = $player->getGameState();
-            $this->assertCount(1, $playerState['cards']);
-            $this->assertEquals('Wächterin', $playerState['cards'][0]['name']);
+            $this->assertCount(1, $playerState->getCards());
+            $this->assertEquals('Wächterin', $playerState->getCards()[0]['name']);
         }
         $players->rewind();
         $this->assertCount(3, $state['outOfGameCards']);
