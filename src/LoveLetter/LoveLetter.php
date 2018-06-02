@@ -172,8 +172,7 @@ class LoveLetter implements GameInterface
     /**
      * @var string
      */
-    // TODO There can be more than one winner
-    protected $winner = '';
+    protected $winners = [];
 
     /**
      * @var array
@@ -326,7 +325,7 @@ class LoveLetter implements GameInterface
             'discardPile' => $visibleDiscardedCard,
             'protectedPlayers' => $this->protectedPlayers,
             'outOfGamePlayers' => $this->outOfGamePlayers,
-            'winner' => $this->winner,
+            'winners' => $this->winners,
             'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
             'guardianEffectChosenPlayer' => $this->guardianEffect['name'],
         ];
@@ -340,7 +339,7 @@ class LoveLetter implements GameInterface
             $this->gameFinished = true;
             $this->gameStarted = false;
             $victoriousPlayer = $this->getNextPlayer();
-            $this->winner = $victoriousPlayer->getId();
+            $this->winners[] = $victoriousPlayer->getId();
             $this->status = $victoriousPlayer->getName() . " hat gewonnen!";
             $this->waitFor = 'startNewGame';
             return true;
@@ -391,7 +390,7 @@ class LoveLetter implements GameInterface
         $this->outOfGameCards = [];
         $this->activeCard = null;
         $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
-        $this->winner = '';
+        $this->winners = [];
         $this->outOfGamePlayers = [];
         $this->gameFinished = false;
         $this->activePlayer = null;
