@@ -170,7 +170,7 @@ class LoveLetter implements GameInterface
     protected $outOfGamePlayers = [];
 
     /**
-     * @var string
+     * @var array
      */
     protected $winners = [];
 
@@ -333,24 +333,59 @@ class LoveLetter implements GameInterface
 
     protected function gameIsFinished()
     {
-        // TODO Check if stack is empty, if so player with highest card wins
-        // If there cards have equal values all player with that value win the game
+        // If there is only one player left, he has won.
         if (count($this->outOfGamePlayers) === $this->players->count() - 1) {
-            $this->gameFinished = true;
-            $this->gameStarted = false;
+            $this->finishGame();
             $victoriousPlayer = $this->getNextPlayer();
             $this->winners[] = $victoriousPlayer->getId();
             $this->status = $victoriousPlayer->getName() . " hat gewonnen!";
-            $this->waitFor = 'startNewGame';
             return true;
-        } else {
-            return false;
         }
+
+        // If there are no cards left at the end of someones turn, players with the highest card win.
+        if (count($this->stack) === 0) {
+            $this->finishGame();
+            $highestValue = 0;
+            /** @var Player $player */
+            foreach ($this->players as $player) {
+                /** @var PlayerState $state */
+                $state = $player->getGameState();
+                $currentValue = $state->getCards()[0]['value'];
+                if ($currentValue > $highestValue) {
+                    $highestValue = $currentValue;
+                }
+            }
+            $this->players->rewind();
+            foreach ($this->players as $player) {
+                /** @var PlayerState $state */
+                $state = $player->getGameState();
+                if ($state->getCards()[0]['value'] === $highestValue) {
+                    $this->winners[] = $player->getId();
+                }
+            }
+            $victoriousPlayer = [];
+            foreach ($this->winners as $winner) {
+                $victoriousPlayer[] = $this->getPlayerById($winner)->getName();
+            }
+            $this->status = 'Gewinner: ' . implode(', ', $victoriousPlayer);
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function finishGame()
+    {
+        $this->gameFinished = true;
+        $this->gameStarted = false;
+        $this->waitFor = self::WAIT_FOR_START_NEW_GAME;
     }
 
     protected function nextTurn()
     {
-        $this->gameIsFinished();
+        if($this->gameIsFinished()) {
+            return;
+        }
         $this->activePlayer = $this->getNextPlayer();
         if (in_array($this->activePlayer->getId(), $this->protectedPlayers)) {
             /** @var PlayerState $gameState */
@@ -409,14 +444,17 @@ class LoveLetter implements GameInterface
         $gameState->addCard($this->drawCard());
     }
 
-    protected function drawCard()
+    protected function drawCard($useReserve = false)
     {
         $card = array_pop($this->stack);
         if (is_null($card)) {
-            return array_pop($this->reserve);
-        } else {
-            return $card;
+            if ($useReserve) {
+                return array_pop($this->reserve);
+            } else {
+                return false;
+            }
         }
+        return $card;
     }
 
     protected function transferCard(&$from, &$to, $index = 0)
@@ -665,7 +703,7 @@ class LoveLetter implements GameInterface
         // TODO Check if princess was discarded
         $card = $this->transferCard($cards, $this->discardPile);
         $gameState->setCards($cards);
-        $gameState->addCard($this->drawCard());
+        $gameState->addCard($this->drawCard(true));
         $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->status = 'Die Karte ' . $card['name'] . ' von ' . $chosenPlayer->getName() . ' wurde abgeworfen und eine neue Karte wurde gezogen. ';
         $this->status .= $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
