@@ -45,7 +45,6 @@ class Game implements MessageComponentInterface
                 'id' => $this->getUniqueId($conn->resourceId)
             ]
         ]));
-        echo "New connection! ({$conn->resourceId})\n";
     }
 
     /**
@@ -64,7 +63,6 @@ class Game implements MessageComponentInterface
             }
         }
         $this->update();
-        echo "Connection {$conn->resourceId} has disconnected\n";
     }
 
     /**
@@ -91,11 +89,10 @@ class Game implements MessageComponentInterface
         $msg = json_decode($msg, true);
         if (isset($msg['id'])) {
             $this->handlePlayer($from, $msg['id']);
-        }
-
-        if (isset($msg['name']) && isset($msg['id'])) {
-            $player = $this->getPlayerById($msg['id']);
-            $player->setName($msg['name']);
+            if (isset($msg['name'])) {
+                $player = $this->getPlayerById($msg['id']);
+                $player->setName($msg['name']);
+            }
         }
 
         if (isset($msg['action'])) {
@@ -113,14 +110,12 @@ class Game implements MessageComponentInterface
                     }
                     $players->rewind();
                     $this->game->start($players);
-                    $this->globalState['status'] = 'Spiel läuft ...';
-                    break;
+                    return;
                 default:
                     $this->game->handleAction($msg['action'], $params);
                     return;
             }
         }
-
         $this->update();
     }
 
@@ -132,9 +127,7 @@ class Game implements MessageComponentInterface
             if ($this->players->count() === 1) {
                 $this->globalState['hostid'] = $player->getId();
             }
-            echo "Create new player\n";
         } elseif (!$this->getPlayerById($id)->getClient()) {
-            echo "Recover player\n";
             $player = $this->getPlayerById($id);
             $player->setClient($conn);
         }
