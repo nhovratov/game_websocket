@@ -10,6 +10,8 @@ namespace MyApp\LoveLetter;
 
 class StackProvider
 {
+    protected $counter = 1;
+
     public function getStack()
     {
         $stack = [];
@@ -28,7 +30,25 @@ class StackProvider
     protected function insertCards(&$stack, $card, $count = 1)
     {
         for ($i = 0; $i < $count; $i++) {
+            $card['id'] = $this->counter;
             $stack[] = $card;
+            $this->counter ++;
         }
+    }
+
+    /**
+     * @return int
+     */
+    public function getCounter(): int
+    {
+        return $this->counter;
+    }
+
+    /**
+     * @param int $counter
+     */
+    public function setCounter(int $counter)
+    {
+        $this->counter = $counter;
     }
 }

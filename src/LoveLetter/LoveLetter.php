@@ -281,11 +281,14 @@ class LoveLetter implements GameInterface
 
     protected function activateCardAction($params)
     {
-        $index = $params['index'];
+        $key = $params['key'];
         /** @var PlayerState $gameState */
         $gameState = $this->activePlayer->getGameState();
         $cards = $gameState->getCards();
-        $this->transferCard($cards, $this->activeCard, $index);
+        $this->activeCard = $cards[$key];
+        $index = array_search($key, array_keys($cards));
+        array_slice($cards, $index, 1);
+        unset($cards[$key]);
         $gameState->setCards($cards);
         $this->handleEffectAction();
     }
@@ -350,7 +353,8 @@ class LoveLetter implements GameInterface
             foreach ($this->players as $player) {
                 /** @var PlayerState $state */
                 $state = $player->getGameState();
-                $currentValue = $state->getCards()[0]['value'];
+                $card = array_slice($state->getCards(), 0, 1)[0];
+                $currentValue = $card['value'];
                 if ($currentValue > $highestValue) {
                     $highestValue = $currentValue;
                 }
@@ -359,7 +363,8 @@ class LoveLetter implements GameInterface
             foreach ($this->players as $player) {
                 /** @var PlayerState $state */
                 $state = $player->getGameState();
-                if ($state->getCards()[0]['value'] === $highestValue) {
+                $card = array_slice($state->getCards(), 0, 1)[0];
+                if ($card['value'] === $highestValue) {
                     $this->winners[] = $player->getId();
                 }
             }
@@ -419,6 +424,7 @@ class LoveLetter implements GameInterface
 
     protected function resetGame()
     {
+        $this->stackProvider->setCounter(1);
         $this->stack = [];
         $this->reserve = [];
         $this->discardPile = [];
@@ -579,7 +585,8 @@ class LoveLetter implements GameInterface
         $card = $params['card'];
         /** @var PlayerState $chosenPlayerState */
         $chosenPlayerState = $chosenPlayer->getGameState();
-        if ($card === $chosenPlayerState->getCards()[0]['name']) {
+        $chosenPlayerCard = array_slice($chosenPlayerState->getCards(), 0, 1)[0];
+        if ($card === $chosenPlayerCard['name']) {
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
             $cards = $chosenPlayerState->getCards();
             $this->transferCard($cards, $this->discardPile, 0);
@@ -619,7 +626,9 @@ class LoveLetter implements GameInterface
             $activePlayerGameState = $this->activePlayer->getGameState();
             /** @var PlayerState $selectedPlayerGameState */
             $selectedPlayerGameState = $selectedPlayer->getGameState();
-            $activePlayerGameState->setPriestEffectVisibleCard($selectedPlayerGameState->getCards()[0]['name']);
+            foreach ($selectedPlayerGameState->getCards() as $card) {
+                $activePlayerGameState->setPriestEffectVisibleCard($card['name']);
+            }
             $this->waitFor = self::WAIT_FOR_FINISH_LOOKING_AT_CARD;
             $this->status = 'Merke dir diese Karte von ' . $enemyName . ' und drücke auf ok!';
             return;
@@ -648,7 +657,9 @@ class LoveLetter implements GameInterface
         $activePlayerState = $this->activePlayer->getGameState();
         /** @var PlayerState $enemyPlayerState */
         $enemyPlayerState = $enemy->getGameState();
-        switch ($activePlayerState->getCards()[0]['value'] <=> $enemyPlayerState->getCards()[0]['value']) {
+        $activePlayerCard = array_slice($activePlayerState->getCards(), 0, 1)[0];
+        $enemyPlayerCard = array_slice($enemyPlayerState->getCards(), 0, 1)[0];
+        switch ($activePlayerCard['value'] <=> $enemyPlayerCard['value']) {
             case 0:
                 $this->status = 'Karten haben den gleichen Wert...keiner fliegt raus. ';
                 break;
@@ -734,12 +745,14 @@ class LoveLetter implements GameInterface
         $activePlayerState = $this->activePlayer->getGameState();
 
         // Swap cards
-        $chosenPlayerCards = $chosenPlayerState->getCards();
         $activePlayerCards = $activePlayerState->getCards();
-        $chosenPlayerCard = $chosenPlayerCards[0];
-        $activePlayerCard = $activePlayerCards[0];
-        $chosenPlayerCards[0] = $activePlayerCard;
-        $activePlayerCards[0] = $chosenPlayerCard;
+        $chosenPlayerCards = $chosenPlayerState->getCards();
+        $activePlayerCard = array_slice($activePlayerCards, 0, 1)[0];
+        unset($activePlayerCards[$activePlayerCard['id']]);
+        $chosenPlayerCard = array_slice($chosenPlayerCards, 0, 1)[0];
+        unset($chosenPlayerCards[$chosenPlayerCard['id']]);
+        $chosenPlayerCards[$activePlayerCard['id']] = $activePlayerCard;
+        $activePlayerCards[$chosenPlayerCard['id']] = $chosenPlayerCard;
         $chosenPlayerState->setCards($chosenPlayerCards);
         $activePlayerState->setCards($activePlayerCards);
 
