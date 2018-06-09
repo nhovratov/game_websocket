@@ -428,6 +428,7 @@ class LoveLetter implements GameInterface
         $this->stack = [];
         $this->reserve = [];
         $this->discardPile = [];
+        $this->protectedPlayers = [];
         $this->outOfGameCards = [];
         $this->activeCard = null;
         $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
