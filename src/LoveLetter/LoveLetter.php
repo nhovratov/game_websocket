@@ -591,12 +591,12 @@ class LoveLetter implements GameInterface
         $chosenPlayerCard = array_slice($chosenPlayerState->getCards(), 0, 1)[0];
         if ($card === $chosenPlayerCard['name']) {
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
-            $cards = $chosenPlayerState->getCards();
-            $this->transferCard($cards, $this->discardPile, 0);
-            $chosenPlayerState->setCards($cards);
             if ($this->gameIsFinished()) {
                 return;
             } else {
+                $cards = $chosenPlayerState->getCards();
+                $this->transferCard($cards, $this->discardPile, 0);
+                $chosenPlayerState->setCards($cards);
                 $this->status = $card . '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
             }
         } else {
