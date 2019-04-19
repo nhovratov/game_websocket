@@ -46,7 +46,7 @@ class LoveLetterTest extends TestCase
         foreach ($players as $player) {
             $playerState = $player->getGameState();
             $this->assertCount(1, $playerState->getCards());
-            $this->assertEquals('Wächterin', $playerState->getCards()[0]['name']);
+            $this->assertEquals('Wächterin', array_values($playerState->getCards())[0]['name']);
         }
         $players->rewind();
         $this->assertCount(3, $state['outOfGameCards']);
@@ -61,7 +61,7 @@ class LoveLetterTest extends TestCase
         $this->assertEquals(1, $state['playerTurn']);
 
         // Player chooses Guardian card
-        $game->handleAction('chooseCard', ['index' => 0]);
+        $game->handleAction('chooseCard', ['key' => 16]);
         $state = $game->getGlobalState();
         $this->assertEquals($game::WAIT_FOR_CHOOSE_PLAYER, $state['waitFor']);
         $this->assertEquals('Wächterin', $state['activeCard']['name']);
