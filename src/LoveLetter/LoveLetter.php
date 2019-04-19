@@ -217,9 +217,9 @@ class LoveLetter implements GameInterface
         $this->updateState();
     }
 
-    public function handleAction($action, $params = [])
+    public function handleAction($params = [])
     {
-        switch ($action) {
+        switch ($this->waitFor) {
             case self::WAIT_FOR_CHOOSE_CARD:
                 $this->activateCardAction($params);
                 break;

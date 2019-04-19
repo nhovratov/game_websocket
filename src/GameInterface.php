@@ -15,5 +15,5 @@ interface GameInterface
 
     public function updateState();
 
-    public function handleAction($action, $params);
+    public function handleAction($params);
 }
