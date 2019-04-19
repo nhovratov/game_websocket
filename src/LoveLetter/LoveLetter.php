@@ -718,7 +718,10 @@ class LoveLetter implements GameInterface
         $this->status = 'Die Karte ' . $card['name'] . ' von ' . $chosenPlayer->getName() . ' wurde abgeworfen ';
         if ($card['name'] === 'Prinzessin') {
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
-            $this->status .= 'und ist  deshalb ausgeschieden. ';
+            if ($this->gameIsFinished()) {
+                return;
+            }
+            $this->status .= 'und ist deshalb ausgeschieden. ';
         } else {
             $gameState->setCards($cards);
             $gameState->addCard($this->drawCard(true));
@@ -779,8 +782,12 @@ class LoveLetter implements GameInterface
     protected function princessEffect()
     {
         $this->outOfGamePlayers[] = $this->activePlayer->getId();
-        $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
-        $this->status = $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
+        if ($this->gameIsFinished()) {
+            return;
+        } else {
+            $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
+            $this->status = $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
+        }
     }
 
 }
