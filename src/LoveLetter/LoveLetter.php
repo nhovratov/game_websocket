@@ -366,6 +366,8 @@ class LoveLetter implements GameInterface
                 $card = array_slice($state->getCards(), 0, 1)[0];
                 if ($card['value'] === $highestValue) {
                     $this->winners[] = $player->getId();
+                } else {
+                    $this->outOfGamePlayers[] = $player->getId();
                 }
             }
             $victoriousPlayer = [];
