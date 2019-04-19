@@ -597,12 +597,12 @@ class LoveLetter implements GameInterface
             } else {
                 $this->status = $card . '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
             }
+        } else {
+            $this->status = $card . '! Falsch geraten! ';
         }
+        $this->status .= $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
         $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
         $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
-        $this->status =
-            $card . '! Falsch geraten! '
-            . $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
     /**
