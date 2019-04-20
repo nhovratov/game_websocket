@@ -143,7 +143,7 @@ class Game implements MessageComponentInterface
             }
             $player->getClient()->send(json_encode([
                 'global' => $this->globalState,
-                'local' => $player->getState()
+                'local' => $player->getState($this->players)
             ]));
         }
         $this->game->updateState();

@@ -9,6 +9,7 @@
 namespace MyApp;
 
 
+use MyApp\LoveLetter\LoveLetter;
 use Ratchet\ConnectionInterface;
 
 class Player
@@ -44,12 +45,13 @@ class Player
         $this->id = (int)$id;
     }
 
-    public function getState()
+    public function getState($players)
     {
         return [
             "id" => $this->id,
             "name" => $this->name,
-            "isHost" => $this->isHost
+            "isHost" => $this->isHost,
+            "canStartGame" => $this->isHost && LoveLetter::isGameReady($players)
         ];
     }
 

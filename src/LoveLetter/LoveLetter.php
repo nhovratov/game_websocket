@@ -279,34 +279,38 @@ class LoveLetter implements GameInterface
     }
 
     /**
+     * @param \SplObjectStorage $players
+     * @return bool
+     */
+    public static function isGameReady(\SplObjectStorage $players)
+    {
+        return $players->count() >= 2;
+    }
+
+    /**
      * @param Player $player
      * @return string
      */
     protected function getAllowedActionByPlayer(Player $player)
     {
-        switch ($this->waitFor) {
-            case self::CHOOSE_GUARDIAN_EFFECT_CARD:
-            case self::CONFIRM_DISCARD_CARD:
-            case self::PLACE_MAID_CARD:
-            case self::FINISH_LOOKING_AT_CARD:
-            case self::CHOOSE_ANY_PLAYER:
-            case self::CHOOSE_CARD:
-                return $this->isPlayerTurn($player) && $this->gameStarted ? $this->waitFor : '';
-                break;
+        if (!$this->gameStarted) {
+            return '';
+        }
 
+        switch ($this->waitFor) {
             case self::CHOOSE_PLAYER:
-                return $this->isPlayerTurn($player)
-                && $this->isAnyOtherPlayerSelectable()
-                && $this->gameStarted ? $this->waitFor : self::CONFIRM_DISCARD_CARD;
+                if (!$this->isPlayerTurn($player)) {
+                    return '';
+                }
+                return $this->isAnyOtherPlayerSelectable() ? $this->waitFor : self::CONFIRM_DISCARD_CARD;
                 break;
 
             case self::SELECT_FIRST_PLAYER:
-                return $player->isHost() && $this->gameStarted ? $this->waitFor : '';
+                return $player->isHost() ? $this->waitFor : '';
                 break;
 
-            case self::START_NEW_GAME:
-                return !$this->gameStarted && $player->isHost() && $this->isGameReady() ? $this->waitFor : '';
-                break;
+            default:
+                return $this->isPlayerTurn($player) ? $this->waitFor : '';
         }
     }
 
@@ -788,11 +792,6 @@ class LoveLetter implements GameInterface
     protected function isPlayerTurn(Player $player)
     {
         return $player->getId() === $this->getPlayerTurn();
-    }
-
-    protected function isGameReady()
-    {
-        return $this->players->count() >= 2;
     }
 
     /**
