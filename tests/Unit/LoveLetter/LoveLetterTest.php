@@ -220,4 +220,109 @@ class LoveLetterTest extends TestCase
         $this->assertCount(2, $state['winners']);
         $this->assertEquals($game::START_NEW_GAME, $state['waitFor']);
     }
+
+    /**
+     * @test
+     */
+    public function testBaronWin()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('baronWin');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1);
+        $john->setName('John');
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2);
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        // John begins
+        $game->handleAction(['id' => 1]);
+
+        // John chooses baron card
+        $game->handleAction(['key' => 7]);
+        $state = $game->getGlobalState();
+        $this->assertEquals($game::CHOOSE_PLAYER, $state['waitFor']);
+        $this->assertEquals('Baron', $state['activeCard']['name']);
+
+        // John chooses Mikel to compare cards
+        $game->handleAction(['id' => 2]);
+
+        // Johns card 'princess(8)' is higher than Mikels card 'guardian(1)'
+        $state = $game->getGlobalState();
+        $this->assertTrue($state['gameFinished']);
+        $this->assertCount(1, $state['winners']);
+        $this->assertEquals(2, $state['outOfGamePlayers'][0]);
+        $this->assertEquals($game::START_NEW_GAME, $state['waitFor']);
+    }
+
+    /**
+     * @test
+     */
+    public function testBaronLoose()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('baronLoose');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1);
+        $john->setName('John');
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2);
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        // Mikel begins
+        $game->handleAction(['id' => 2]);
+
+        // Mikel chooses baron card
+        $game->handleAction(['key' => 1]);
+
+        // Mikel chooses John to compare cards
+        $game->handleAction(['id' => 1]);
+
+        // Johns card 'princess(8)' is higher than Mikels card 'guardian(1)'
+        $state = $game->getGlobalState();
+        $this->assertTrue($state['gameFinished']);
+        $this->assertCount(1, $state['winners']);
+        $this->assertEquals(2, $state['outOfGamePlayers'][0]);
+        $this->assertEquals($game::START_NEW_GAME, $state['waitFor']);
+    }
+
+    /**
+     * @test
+     */
+    public function testBaronEqual()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('baronEqual');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1);
+        $john->setName('John');
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2);
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        // Mikel begins
+        $game->handleAction(['id' => 2]);
+
+        // Mikel chooses baron card
+        $game->handleAction(['key' => 10]);
+
+        // Mikel chooses John to compare cards
+        $game->handleAction(['id' => 1]);
+
+        // Johns card 'princess(8)' is equal to Mikels card 'princess(8)'
+        $state = $game->getGlobalState();
+        $this->assertFalse($state['gameFinished']);
+    }
 }

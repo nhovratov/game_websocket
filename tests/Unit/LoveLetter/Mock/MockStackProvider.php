@@ -37,4 +37,25 @@ class MockStackProvider extends StackProvider
     {
         $this->insertCards($stack, LoveLetter::PRIESTCARD, 8);
     }
+
+    protected function baronWinStack(&$stack)
+    {
+        $this->insertCards($stack, LoveLetter::PRINCESSCARD, 1);
+        $this->insertCards($stack, LoveLetter::GUARDIANCARD, 5);
+        $this->insertCards($stack, LoveLetter::BARONCARD, 1);
+    }
+
+    protected function baronLooseStack(&$stack)
+    {
+        $this->insertCards($stack, LoveLetter::BARONCARD, 1);
+        $this->insertCards($stack, LoveLetter::GUARDIANCARD, 5);
+        $this->insertCards($stack, LoveLetter::PRINCESSCARD, 1);
+    }
+
+    protected function baronEqualStack(&$stack)
+    {
+        $this->insertCards($stack, LoveLetter::BARONCARD, 10);
+        $this->insertCards($stack, LoveLetter::GUARDIANCARD, 4);
+        $this->insertCards($stack, LoveLetter::PRINCESSCARD, 2);
+    }
 }
