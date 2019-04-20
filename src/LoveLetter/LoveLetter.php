@@ -735,7 +735,7 @@ class LoveLetter implements GameInterface
             foreach ($this->players as $player) {
                 /** @var PlayerState $state */
                 $state = $player->getGameState();
-                $card = array_slice($state->getCards(), 0, 1)[0];
+                $card = current($state->getCards());
                 $currentValue = $card['value'];
                 if ($currentValue > $highestValue) {
                     $highestValue = $currentValue;
@@ -745,7 +745,7 @@ class LoveLetter implements GameInterface
             foreach ($this->players as $player) {
                 /** @var PlayerState $state */
                 $state = $player->getGameState();
-                $card = array_slice($state->getCards(), 0, 1)[0];
+                $card = current($state->getCards());
                 if ($card['value'] === $highestValue) {
                     $this->winners[] = $player->getId();
                 } else {
