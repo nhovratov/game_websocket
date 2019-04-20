@@ -32,7 +32,7 @@ class StackProvider
         for ($i = 0; $i < $count; $i++) {
             $card['id'] = $this->counter;
             $stack[] = $card;
-            $this->counter ++;
+            $this->counter += 1;
         }
     }
 
