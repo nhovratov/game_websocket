@@ -42,7 +42,7 @@ class LoveLetterTest extends TestCase
         $this->assertCount(2, $game->getPlayers());
         $players->rewind();
         $this->assertTrue($state['gameStarted']);
-        $this->assertEquals($game::WAIT_FOR_SELECT_FIRST_PLAYER, $state['waitFor']);
+        $this->assertEquals($game::SELECT_FIRST_PLAYER, $state['waitFor']);
         foreach ($players as $player) {
             $playerState = $player->getGameState();
             $this->assertCount(1, $playerState->getCards());
@@ -57,19 +57,19 @@ class LoveLetterTest extends TestCase
         // John begins
         $game->handleAction('selectFirstPlayer', ['id' => 1]);
         $state = $game->getGlobalState();
-        $this->assertEquals($game::WAIT_FOR_CHOOSE_CARD, $state['waitFor']);
+        $this->assertEquals($game::CHOOSE_CARD, $state['waitFor']);
         $this->assertEquals(1, $state['playerTurn']);
 
         // Player chooses Guardian card
         $game->handleAction('chooseCard', ['key' => 16]);
         $state = $game->getGlobalState();
-        $this->assertEquals($game::WAIT_FOR_CHOOSE_PLAYER, $state['waitFor']);
+        $this->assertEquals($game::CHOOSE_PLAYER, $state['waitFor']);
         $this->assertEquals('Wächterin', $state['activeCard']['name']);
 
         // Select Mikel for Effect card
         $game->handleAction('choosePlayer', ['id' => 2]);
         $state = $game->getGlobalState();
-        $this->assertEquals($game::WAIT_FOR_CHOOSE_GUARDIAN_EFFECT_CARD, $state['waitFor']);
+        $this->assertEquals($game::CHOOSE_GUARDIAN_EFFECT_CARD, $state['waitFor']);
 
         // Select Baron (wrong)
         $game->handleAction('selectGuardianEffectCard', ['card' => 'Baron']);
@@ -81,7 +81,7 @@ class LoveLetterTest extends TestCase
         $state = $game->getGlobalState();
         $this->assertEmpty($state['activeCard']);
         $this->assertEquals(2, $state['playerTurn']);
-        $this->assertEquals($game::WAIT_FOR_CHOOSE_CARD, $state['waitFor']);
+        $this->assertEquals($game::CHOOSE_CARD, $state['waitFor']);
     }
 
     /**
