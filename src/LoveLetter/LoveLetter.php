@@ -219,7 +219,13 @@ class LoveLetter implements GameInterface
 
     public function handleAction($params = [])
     {
-        switch ($this->getResolvedAction()) {
+        // TODO Must receive player as argument, because active player is not always set. Ideally players have session keys.
+        if ($this->activePlayer) {
+            $action = $this->getAllowedActionByPlayer($this->activePlayer);
+        } else {
+            $action = $this->waitFor;
+        }
+        switch ($action) {
             case self::CHOOSE_CARD:
                 $this->activateCardAction($params);
                 break;
@@ -252,12 +258,13 @@ class LoveLetter implements GameInterface
         if (!$this->players) {
             return;
         }
-        $playerinfo = $this->getPlayers();
+        $playerinfo = $this->getPlayerInfo();
         /** @var Player $player */
         foreach ($this->players as $player) {
             if (!$player->getClient()) {
                 continue;
             }
+            $player->getGameState()->setAllowedAction($this->getAllowedActionByPlayer($player));
             $msg = [
                 'dataType' => 'game',
                 'global' => $this->getGlobalState(),
@@ -269,6 +276,38 @@ class LoveLetter implements GameInterface
             $player->getClient()->send(json_encode($msg));
         }
         $this->players->rewind();
+    }
+
+    /**
+     * @param Player $player
+     * @return string
+     */
+    protected function getAllowedActionByPlayer(Player $player)
+    {
+        switch ($this->waitFor) {
+            case self::CHOOSE_GUARDIAN_EFFECT_CARD:
+            case self::CONFIRM_DISCARD_CARD:
+            case self::PLACE_MAID_CARD:
+            case self::FINISH_LOOKING_AT_CARD:
+            case self::CHOOSE_ANY_PLAYER:
+            case self::CHOOSE_CARD:
+                return $this->isPlayerTurn($player) && $this->gameStarted ? $this->waitFor : '';
+                break;
+
+            case self::CHOOSE_PLAYER:
+                return $this->isPlayerTurn($player)
+                && $this->isAnyOtherPlayerSelectable()
+                && $this->gameStarted ? $this->waitFor : self::CONFIRM_DISCARD_CARD;
+                break;
+
+            case self::SELECT_FIRST_PLAYER:
+                return $player->isHost() && $this->gameStarted ? $this->waitFor : '';
+                break;
+
+            case self::START_NEW_GAME:
+                return !$this->gameStarted && $player->isHost() && $this->isGameReady() ? $this->waitFor : '';
+                break;
+        }
     }
 
     public function getGlobalState()
@@ -726,23 +765,34 @@ class LoveLetter implements GameInterface
      */
     protected function isPlayerSelectable($player)
     {
-        return $player->getId() !== $this->getPlayerTurn()
-            && !in_array($player->getId(), $this->outOfGamePlayers)
+        return !in_array($player->getId(), $this->outOfGamePlayers)
             && !in_array($player->getId(), $this->protectedPlayers);
     }
 
-    protected function getResolvedAction()
+    protected function isAnyOtherPlayerSelectable()
     {
-        if ($this->waitFor === self::CHOOSE_PLAYER) {
-            /** @var Player $player */
-            foreach ($this->players as $player) {
-                if ($this->isPlayerSelectable($player)) {
-                    return $this->waitFor;
-                }
+        /** @var Player $player */
+        $players = clone $this->players;
+        foreach ($players as $player) {
+            if ($this->isPlayerSelectable($player) && $player->getId() !== $this->getPlayerTurn()) {
+                return true;
             }
-            return self::CONFIRM_DISCARD_CARD;
         }
-        return $this->waitFor;
+        return false;
+    }
+
+    /**
+     * @param Player $player
+     * @return bool
+     */
+    protected function isPlayerTurn(Player $player)
+    {
+        return $player->getId() === $this->getPlayerTurn();
+    }
+
+    protected function isGameReady()
+    {
+        return $this->players->count() >= 2;
     }
 
     /**
@@ -779,18 +829,20 @@ class LoveLetter implements GameInterface
     }
 
     /**
+     * Used for brief overview of ingame players
+     * // TODO Extend with more states like proteced, outOfGame...
      * @return mixed
      */
-    public function getPlayers()
+    public function getPlayerInfo()
     {
         $players = [];
-        foreach ($this->players as $player) {
+        $clonedPlayers = clone $this->players;
+        foreach ($clonedPlayers as $player) {
             $players[] = [
                 "id" => $player->getId(),
                 "name" => $player->getName(),
             ];
         }
-        $this->players->rewind();
         return $players;
     }
 
@@ -802,7 +854,7 @@ class LoveLetter implements GameInterface
     {
         /** @var Player $player */
         foreach ($this->players as $player) {
-            if ($player->getId() == $id) {
+            if ($player->getId() === (int)$id) {
                 $this->players->rewind();
                 return $player;
             }

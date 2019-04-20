@@ -33,17 +33,23 @@ class Player
      */
     protected $name = '';
 
+    /**
+     * @var bool
+     */
+    protected $isHost = false;
+
     public function __construct($client, $id)
     {
         $this->client = $client;
-        $this->id = $id;
+        $this->id = (int)$id;
     }
 
     public function getState()
     {
         return [
             "id" => $this->id,
-            "name" => $this->name
+            "name" => $this->name,
+            "isHost" => $this->isHost
         ];
     }
 
@@ -66,7 +72,7 @@ class Player
     /**
      * @return mixed
      */
-    public function getId()
+    public function getId() : int
     {
         return $this->id;
     }
@@ -106,6 +112,22 @@ class Player
     public function setName($name)
     {
         $this->name = $name;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHost(): bool
+    {
+        return $this->isHost;
+    }
+
+    /**
+     * @param bool $isHost
+     */
+    public function setIsHost(bool $isHost)
+    {
+        $this->isHost = $isHost;
     }
 
 }

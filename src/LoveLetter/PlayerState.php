@@ -28,12 +28,18 @@ class PlayerState implements StateInterface
      */
     protected $priestEffectVisibleCard = '';
 
+    /**
+     * @var string
+     */
+    protected $allowedAction = '';
+
     public function getState()
     {
         return [
             'cards' => $this->cards,
             'openEffectCards' => $this->openEffectCards,
-            'priestEffectVisibleCard' => $this->priestEffectVisibleCard
+            'priestEffectVisibleCard' => $this->priestEffectVisibleCard,
+            'allowedAction' => $this->allowedAction
         ];
     }
 
@@ -41,6 +47,7 @@ class PlayerState implements StateInterface
     {
         $this->cards = [];
         $this->openEffectCards = [];
+        $this->allowedAction = '';
     }
 
     /**
@@ -102,6 +109,22 @@ class PlayerState implements StateInterface
     public function setPriestEffectVisibleCard(string $priestEffectVisibleCard)
     {
         $this->priestEffectVisibleCard = $priestEffectVisibleCard;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAllowedAction(): string
+    {
+        return $this->allowedAction;
+    }
+
+    /**
+     * @param string $allowedAction
+     */
+    public function setAllowedAction(string $allowedAction)
+    {
+        $this->allowedAction = $allowedAction;
     }
 
 }

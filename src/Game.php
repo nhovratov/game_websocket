@@ -125,6 +125,7 @@ class Game implements MessageComponentInterface
             $player = new Player($conn, $id);
             $this->players->attach($player);
             if ($this->players->count() === 1) {
+                $player->setIsHost(true);
                 $this->globalState['hostid'] = $player->getId();
             }
         } elseif (!$this->getPlayerById($id)->getClient()) {

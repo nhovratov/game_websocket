@@ -39,7 +39,7 @@ class LoveLetterTest extends TestCase
         $game->start($players);
         $state = $game->getGlobalState();
 
-        $this->assertCount(2, $game->getPlayers());
+        $this->assertCount(2, $game->getPlayerInfo());
         $players->rewind();
         $this->assertTrue($state['gameStarted']);
         $this->assertEquals($game::SELECT_FIRST_PLAYER, $state['waitFor']);
@@ -98,7 +98,7 @@ class LoveLetterTest extends TestCase
         $game->start($players);
         $state = $game->getGlobalState();
 
-        $this->assertCount(3, $game->getPlayers());
+        $this->assertCount(3, $game->getPlayerInfo());
         $players->rewind();
         $this->assertTrue($state['gameStarted']);
         $this->assertCount(0, $state['outOfGameCards']);
