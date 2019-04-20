@@ -439,9 +439,6 @@ class LoveLetter implements GameInterface
         unset($cards[$key]);
         $gameState->setCards($cards);
         $this->handleEffectAction();
-        if ($this->waitFor === self::CHOOSE_PLAYER) {
-            !$this->isAnyOtherPlayerSelectable() && $this->isGameFinished();
-        }
     }
 
     protected function discardActiveCardAction()
@@ -486,6 +483,15 @@ class LoveLetter implements GameInterface
                 break;
             case 'Prinzessin':
                 $this->princessEffect();
+        }
+
+        // Check for finished game after each card effect
+        // TODO Skip no game winning cards and end game before effect takes effect
+        if ($this->waitFor === self::CHOOSE_PLAYER) {
+            !$this->isAnyOtherPlayerSelectable() && $this->isGameFinished();
+        }
+        if ($this->waitFor === self::CONFIRM_DISCARD_CARD) {
+            $this->isGameFinished();
         }
     }
 

@@ -103,7 +103,7 @@ class LoveLetterTest extends TestCase
         $this->assertEquals($game::CHOOSE_CARD, $state['waitFor']);
         $this->assertEquals(1, $state['playerTurn']);
 
-        // Player chooses Guardian card
+        // John chooses Guardian card
         $game->handleAction(['key' => 7]);
         $state = $game->getGlobalState();
         $this->assertEquals($game::CHOOSE_PLAYER, $state['waitFor']);
@@ -145,7 +145,7 @@ class LoveLetterTest extends TestCase
         // John begins
         $game->handleAction(['id' => 1]);
 
-        // Player chooses Maid card
+        // John chooses Maid card
         $game->handleAction(['key' => 8]);
         $state = $game->getGlobalState();
         $this->assertEquals($game::PLACE_MAID_CARD, $state['waitFor']);
@@ -159,6 +159,60 @@ class LoveLetterTest extends TestCase
 
         // Select Guardian, but no selectable player left
         $game->handleAction(['key' => 7]);
+
+        // No cards left, game is finished with a tie
+        $state = $game->getGlobalState();
+        $this->assertTrue($state['gameFinished']);
+        $this->assertCount(2, $state['winners']);
+        $this->assertEquals($game::START_NEW_GAME, $state['waitFor']);
+    }
+
+    /**
+     * @test
+     */
+    public function testPriest()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('priest');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1);
+        $john->setName('John');
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2);
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        // John begins
+        $game->handleAction(['id' => 1]);
+
+        // John chooses priest card
+        $game->handleAction(['key' => 8]);
+        $state = $game->getGlobalState();
+        $this->assertEquals($game::CHOOSE_PLAYER, $state['waitFor']);
+        $this->assertEquals('Priester', $state['activeCard']['name']);
+
+        // John chooses Mikel to look into his card
+        $game->handleAction(['id' => 2]);
+        $state = $game->getGlobalState();
+        $this->assertEquals($game::FINISH_LOOKING_AT_CARD, $state['waitFor']);
+        $johnState = $john->getGameState();
+        $this->assertEquals('Priester', $johnState->getPriestEffectVisibleCard());
+
+        // John finishes looking at Mikels cards and discards his card
+        $game->handleAction();
+        $game->handleAction();
+
+        // Mikel chooses priest card
+        $game->handleAction(['key' => 7]);
+
+        // Mikel chooses John to look in his card
+        $game->handleAction(['id' => 1]);
+
+        // Mikel finishes looking
+        $game->handleAction();
 
         // No cards left, game is finished with a tie
         $state = $game->getGlobalState();
