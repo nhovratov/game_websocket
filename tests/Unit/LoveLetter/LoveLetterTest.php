@@ -55,24 +55,24 @@ class LoveLetterTest extends TestCase
         $this->assertEquals('Prinzessin', $state['outOfGameCards'][2]['name']);
 
         // John begins
-        $game->handleAction('selectFirstPlayer', ['id' => 1]);
+        $game->handleAction(['id' => 1]);
         $state = $game->getGlobalState();
         $this->assertEquals($game::CHOOSE_CARD, $state['waitFor']);
         $this->assertEquals(1, $state['playerTurn']);
 
         // Player chooses Guardian card
-        $game->handleAction('chooseCard', ['key' => 16]);
+        $game->handleAction(['key' => 16]);
         $state = $game->getGlobalState();
         $this->assertEquals($game::CHOOSE_PLAYER, $state['waitFor']);
         $this->assertEquals('Wächterin', $state['activeCard']['name']);
 
         // Select Mikel for Effect card
-        $game->handleAction('choosePlayer', ['id' => 2]);
+        $game->handleAction(['id' => 2]);
         $state = $game->getGlobalState();
         $this->assertEquals($game::CHOOSE_GUARDIAN_EFFECT_CARD, $state['waitFor']);
 
         // Select Baron (wrong)
-        $game->handleAction('selectGuardianEffectCard', ['card' => 'Baron']);
+        $game->handleAction(['card' => 'Baron']);
         $state = $game->getGlobalState();
         $this->assertFalse($state['gameFinished']);
 
