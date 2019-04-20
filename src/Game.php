@@ -135,8 +135,17 @@ class Game implements MessageComponentInterface
 
     protected function update()
     {
-        $this->updateGlobalState();
-        $this->alertAll();
+        $this->globalState['players'] = $this->getPlayers();
+        foreach ($this->players as $player) {
+            if (!$player->getClient()) {
+                continue;
+            }
+            $player->getClient()->send(json_encode([
+                'global' => $this->globalState,
+                'local' => $player->getState()
+            ]));
+        }
+        $this->game->updateState();
     }
 
     protected function getUniqueId($id)
@@ -169,11 +178,6 @@ class Game implements MessageComponentInterface
         return false;
     }
 
-    protected function updateGlobalState()
-    {
-        $this->globalState['players'] = $this->getPlayers();
-    }
-
     protected function getPlayers()
     {
         $players = [];
@@ -186,20 +190,4 @@ class Game implements MessageComponentInterface
         }
         return $players;
     }
-
-    protected function alertAll()
-    {
-        foreach ($this->players as $player) {
-            if (!$player->getClient()) {
-                continue;
-            }
-            $generalMessage = [
-                'global' => $this->globalState,
-                'local' => $player->getState()
-            ];
-            $player->getClient()->send(json_encode($generalMessage));
-        }
-        $this->game->updateState();
-    }
-
 }
