@@ -531,6 +531,7 @@ class LoveLetter implements GameInterface
         $this->status .= $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
         $this->waitFor = self::CONFIRM_DISCARD_CARD;
         $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
+        $this->isGameFinished();
     }
 
     /**
