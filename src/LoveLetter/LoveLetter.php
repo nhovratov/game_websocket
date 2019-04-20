@@ -439,6 +439,9 @@ class LoveLetter implements GameInterface
         unset($cards[$key]);
         $gameState->setCards($cards);
         $this->handleEffectAction();
+        if ($this->waitFor === self::CHOOSE_PLAYER) {
+            !$this->isAnyOtherPlayerSelectable() && $this->isGameFinished();
+        }
     }
 
     protected function discardActiveCardAction()
