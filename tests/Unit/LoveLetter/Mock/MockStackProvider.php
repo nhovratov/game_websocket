@@ -6,17 +6,30 @@ use MyApp\LoveLetter\StackProvider;
 
 class MockStackProvider extends StackProvider
 {
+    protected $testcase = 'guardian';
+
     public function getStack()
     {
         $stack = [];
-        $this->insertCards($stack, LoveLetter::PRIESTCARD, LoveLetter::PRIESTCOUNT);
-        $this->insertCards($stack, LoveLetter::BARONCARD, LoveLetter::BARONCOUNT);
-        $this->insertCards($stack, LoveLetter::MAIDCARD, LoveLetter::MAIDCOUNT);
-        $this->insertCards($stack, LoveLetter::PRINCECARD, LoveLetter::PRINCECOUNT);
-        $this->insertCards($stack, LoveLetter::KINGCARD, LoveLetter::COUNTESSCOUNT);
-        $this->insertCards($stack, LoveLetter::COUNTESSCARD, LoveLetter::COUNTESSCOUNT);
-        $this->insertCards($stack, LoveLetter::PRINCESSCARD, LoveLetter::PRINCESSCOUNT);
-        $this->insertCards($stack, LoveLetter::GUARDIANCARD, LoveLetter::GUARDIANCOUNT);
+        $methodName = "{$this->testcase}Stack";
+        $this->$methodName($stack);
         return $stack;
+    }
+
+    public function setTestCase($case)
+    {
+        $this->testcase = $case;
+    }
+
+    protected function guardianStack(&$stack)
+    {
+        $this->insertCards($stack, LoveLetter::GUARDIANCARD, 7);
+    }
+
+    protected function maidStack(&$stack)
+    {
+        $this->insertCards($stack, LoveLetter::MAIDCARD, 6);
+        $this->insertCards($stack, LoveLetter::GUARDIANCARD, 1);
+        $this->insertCards($stack, LoveLetter::MAIDCARD, 1);
     }
 }

@@ -24,70 +24,45 @@ class LoveLetterTest extends TestCase
     /**
      * @test
      */
-    public function testStart2()
+    public function testStartWithTwoPlayers()
     {
         $players = new SplObjectStorage();
         $game = new LoveLetter($this->mockStackProvider);
         $player1 = new Player(new Connection(), 1);
-        $player1->setName('John');
-        $players->attach($player1);
-
         $player2 = new Player(new Connection(), 2);
-        $player2->setName('Mikel');
+        $players->attach($player1);
         $players->attach($player2);
 
         $game->start($players);
         $state = $game->getGlobalState();
 
         $this->assertCount(2, $game->getPlayerInfo());
-        $players->rewind();
         $this->assertTrue($state['gameStarted']);
-        $this->assertEquals($game::SELECT_FIRST_PLAYER, $state['waitFor']);
-        foreach ($players as $player) {
-            $playerState = $player->getGameState();
-            $this->assertCount(1, $playerState->getCards());
-            $this->assertEquals('Wächterin', array_values($playerState->getCards())[0]['name']);
-        }
-        $players->rewind();
         $this->assertCount(3, $state['outOfGameCards']);
+        $this->assertEquals($game::SELECT_FIRST_PLAYER, $state['waitFor']);
+
+        $playerState = $player1->getGameState();
+        $this->assertCount(1, $playerState->getCards());
+
+        $cards = $playerState->getCards();
+        $handCard = current($cards);
+        $this->assertEquals('Wächterin', $handCard['name']);
+
+        $playerState = $player2->getGameState();
+        $this->assertCount(1, $playerState->getCards());
+        $cards = $playerState->getCards();
+        $handCard = current($cards);
+        $this->assertEquals('Wächterin', $handCard['name']);
+
         $this->assertEquals('Wächterin', $state['outOfGameCards'][0]['name']);
         $this->assertEquals('Wächterin', $state['outOfGameCards'][1]['name']);
-        $this->assertEquals('Prinzessin', $state['outOfGameCards'][2]['name']);
-
-        // John begins
-        $game->handleAction(['id' => 1]);
-        $state = $game->getGlobalState();
-        $this->assertEquals($game::CHOOSE_CARD, $state['waitFor']);
-        $this->assertEquals(1, $state['playerTurn']);
-
-        // Player chooses Guardian card
-        $game->handleAction(['key' => 16]);
-        $state = $game->getGlobalState();
-        $this->assertEquals($game::CHOOSE_PLAYER, $state['waitFor']);
-        $this->assertEquals('Wächterin', $state['activeCard']['name']);
-
-        // Select Mikel for Effect card
-        $game->handleAction(['id' => 2]);
-        $state = $game->getGlobalState();
-        $this->assertEquals($game::CHOOSE_GUARDIAN_EFFECT_CARD, $state['waitFor']);
-
-        // Select Baron (wrong)
-        $game->handleAction(['card' => 'Baron']);
-        $state = $game->getGlobalState();
-        $this->assertFalse($state['gameFinished']);
-
-        // John was wrong so he discards his card
-        $game->handleAction('confirmDiscardCard');
-        $state = $game->getGlobalState();
-        $this->assertEmpty($state['activeCard']);
-        $this->assertEquals(2, $state['playerTurn']);
-        $this->assertEquals($game::CHOOSE_CARD, $state['waitFor']);
+        $this->assertEquals('Wächterin', $state['outOfGameCards'][2]['name']);
     }
 
     /**
      * @test
      */
-    public function testStart3()
+    public function testStartWithThreePlayers()
     {
         $players = new SplObjectStorage();
         $game = new LoveLetter($this->mockStackProvider);
@@ -99,9 +74,96 @@ class LoveLetterTest extends TestCase
         $state = $game->getGlobalState();
 
         $this->assertCount(3, $game->getPlayerInfo());
-        $players->rewind();
         $this->assertTrue($state['gameStarted']);
         $this->assertCount(0, $state['outOfGameCards']);
     }
 
+
+    /**
+     * @test
+     */
+    public function testGuardians()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('guardian');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1);
+        $john->setName('John');
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2);
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        // John begins
+        $game->handleAction(['id' => 1]);
+        $state = $game->getGlobalState();
+        $this->assertEquals($game::CHOOSE_CARD, $state['waitFor']);
+        $this->assertEquals(1, $state['playerTurn']);
+
+        // Player chooses Guardian card
+        $game->handleAction(['key' => 7]);
+        $state = $game->getGlobalState();
+        $this->assertEquals($game::CHOOSE_PLAYER, $state['waitFor']);
+        $this->assertEquals('Wächterin', $state['activeCard']['name']);
+
+        // Select Mikel for Effect card
+        $game->handleAction(['id' => 2]);
+        $state = $game->getGlobalState();
+        $this->assertEquals($game::CHOOSE_GUARDIAN_EFFECT_CARD, $state['waitFor']);
+
+        // Select Baron (wrong)
+        $game->handleAction(['card' => 'Baron']);
+
+        // No cards left, game is finished with a tie
+        $state = $game->getGlobalState();
+        $this->assertTrue($state['gameFinished']);
+        $this->assertCount(2, $state['winners']);
+        $this->assertEquals($game::START_NEW_GAME, $state['waitFor']);
+    }
+
+    /**
+     * @test
+     */
+    public function testMaid()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('maid');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1);
+        $john->setName('John');
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2);
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        // John begins
+        $game->handleAction(['id' => 1]);
+
+        // Player chooses Maid card
+        $game->handleAction(['key' => 8]);
+        $state = $game->getGlobalState();
+        $this->assertEquals($game::PLACE_MAID_CARD, $state['waitFor']);
+        $this->assertEquals('Zofe', $state['activeCard']['name']);
+
+        // Place maid card
+        $game->handleAction();
+        $state = $game->getGlobalState();
+        $this->assertEquals(2, $state['playerTurn']);
+        $this->assertEquals($game::CHOOSE_CARD, $state['waitFor']);
+
+        // Select Guardian, but no selectable player left
+        $game->handleAction(['key' => 7]);
+
+        // No cards left, game is finished with a tie
+        $state = $game->getGlobalState();
+        $this->assertTrue($state['gameFinished']);
+        $this->assertCount(2, $state['winners']);
+        $this->assertEquals($game::START_NEW_GAME, $state['waitFor']);
+    }
 }
