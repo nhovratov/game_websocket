@@ -219,7 +219,7 @@ class LoveLetter implements GameInterface
 
     public function handleAction($params = [])
     {
-        switch ($this->waitFor) {
+        switch ($this->getResolvedAction()) {
             case self::WAIT_FOR_CHOOSE_CARD:
                 $this->activateCardAction($params);
                 break;
@@ -271,6 +271,86 @@ class LoveLetter implements GameInterface
         $this->players->rewind();
     }
 
+    protected function resetGame()
+    {
+        $this->stackProvider->setCounter(1);
+        $this->stack = [];
+        $this->reserve = [];
+        $this->discardPile = [];
+        $this->protectedPlayers = [];
+        $this->outOfGameCards = [];
+        $this->activeCard = null;
+        $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
+        $this->winners = [];
+        $this->outOfGamePlayers = [];
+        $this->gameFinished = false;
+        $this->activePlayer = null;
+        foreach ($this->players as $player) {
+            if ($player->getGameState()) {
+                $player->getGameState()->reset();
+            }
+        }
+        $this->players->rewind();
+    }
+
+    protected function nextTurn()
+    {
+        if ($this->isGameFinished()) {
+            return;
+        }
+        $this->activePlayer = $this->getNextPlayer();
+        if (in_array($this->activePlayer->getId(), $this->protectedPlayers)) {
+            /** @var PlayerState $gameState */
+            $gameState = $this->activePlayer->getGameState();
+            $openEffectCards = $gameState->getOpenEffectCards();
+            $this->transferCard($openEffectCards, $this->discardPile);
+            $gameState->setOpenEffectCards($openEffectCards);
+            $key = array_search($this->activePlayer->getId(), $this->protectedPlayers);
+            array_splice($this->protectedPlayers, $key, 1);
+        }
+        $this->drawCardForActivePlayer();
+        $this->waitFor = self::WAIT_FOR_CHOOSE_CARD;
+        $this->status = "{$this->activePlayer->getName()} ist dran ...";
+    }
+
+    protected function drawCardForActivePlayer()
+    {
+        /** @var PlayerState $gameState */
+        $gameState = $this->activePlayer->getGameState();
+        $gameState->addCard($this->drawCard());
+    }
+
+    protected function drawCard($useReserve = false)
+    {
+        $card = array_pop($this->stack);
+        if (is_null($card)) {
+            if ($useReserve) {
+                return array_pop($this->reserve);
+            } else {
+                return false;
+            }
+        }
+        return $card;
+    }
+
+    protected function transferCard(&$from, &$to, $index = 0)
+    {
+        if (is_null($to) || is_string(key($to))) {
+            $to = array_splice($from, $index, 1)[0];
+            return $to;
+        } else {
+            $to[] = array_splice($from, $index, 1)[0];
+            return $to[count($to) - 1];
+        }
+    }
+
+    protected function finishGame()
+    {
+        $this->gameFinished = true;
+        $this->gameStarted = false;
+        $this->waitFor = self::WAIT_FOR_START_NEW_GAME;
+    }
+
     protected function setupFirstTurnAction($params)
     {
         $this->activePlayer = $this->getPlayerById($params['id']);
@@ -309,225 +389,6 @@ class LoveLetter implements GameInterface
         $this->nextTurn();
     }
 
-    public function getGlobalState()
-    {
-        $visibleDiscardedCard = [];
-        $numDicardedCards = count($this->discardPile);
-        if ($numDicardedCards > 0) {
-            $visibleDiscardedCard = [$this->discardPile[$numDicardedCards - 1]];
-        }
-        $playerTurn = $this->activePlayer ? $this->activePlayer->getId() : '';
-        return [
-            'gameStarted' => $this->gameStarted,
-            'gameFinished' => $this->gameFinished,
-            'playerTurn' => $playerTurn,
-            'waitFor' => $this->waitFor,
-            'status' => $this->status,
-            'activeCard' => $this->activeCard,
-            'outOfGameCards' => $this->outOfGameCards,
-            'discardPile' => $visibleDiscardedCard,
-            'protectedPlayers' => $this->protectedPlayers,
-            'outOfGamePlayers' => $this->outOfGamePlayers,
-            'winners' => $this->winners,
-            'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
-            'guardianEffectChosenPlayer' => $this->guardianEffect['name'],
-        ];
-    }
-
-    protected function gameIsFinished()
-    {
-        // If there is only one player left, he has won.
-        if (count($this->outOfGamePlayers) === $this->players->count() - 1) {
-            $this->finishGame();
-            $victoriousPlayer = $this->getNextPlayer();
-            $this->winners[] = $victoriousPlayer->getId();
-            $this->status = $victoriousPlayer->getName() . " hat gewonnen!";
-            return true;
-        }
-
-        // If there are no cards left at the end of someones turn, players with the highest card win.
-        if (count($this->stack) === 0) {
-            $this->finishGame();
-            $highestValue = 0;
-            /** @var Player $player */
-            foreach ($this->players as $player) {
-                /** @var PlayerState $state */
-                $state = $player->getGameState();
-                $card = array_slice($state->getCards(), 0, 1)[0];
-                $currentValue = $card['value'];
-                if ($currentValue > $highestValue) {
-                    $highestValue = $currentValue;
-                }
-            }
-            $this->players->rewind();
-            foreach ($this->players as $player) {
-                /** @var PlayerState $state */
-                $state = $player->getGameState();
-                $card = array_slice($state->getCards(), 0, 1)[0];
-                if ($card['value'] === $highestValue) {
-                    $this->winners[] = $player->getId();
-                } else {
-                    $this->outOfGamePlayers[] = $player->getId();
-                }
-            }
-            $victoriousPlayer = [];
-            foreach ($this->winners as $winner) {
-                $victoriousPlayer[] = $this->getPlayerById($winner)->getName();
-            }
-            $this->status = 'Gewinner: ' . implode(', ', $victoriousPlayer);
-            return true;
-        }
-
-        return false;
-    }
-
-    protected function finishGame()
-    {
-        $this->gameFinished = true;
-        $this->gameStarted = false;
-        $this->waitFor = self::WAIT_FOR_START_NEW_GAME;
-    }
-
-    protected function nextTurn()
-    {
-        if ($this->gameIsFinished()) {
-            return;
-        }
-        $this->activePlayer = $this->getNextPlayer();
-        if (in_array($this->activePlayer->getId(), $this->protectedPlayers)) {
-            /** @var PlayerState $gameState */
-            $gameState = $this->activePlayer->getGameState();
-            $openEffectCards = $gameState->getOpenEffectCards();
-            $this->transferCard($openEffectCards, $this->discardPile);
-            $gameState->setOpenEffectCards($openEffectCards);
-            $key = array_search($this->activePlayer->getId(), $this->protectedPlayers);
-            array_splice($this->protectedPlayers, $key, 1);
-        }
-        $this->drawCardForActivePlayer();
-        $this->waitFor = self::WAIT_FOR_CHOOSE_CARD;
-        $this->status = "{$this->activePlayer->getName()} ist dran ...";
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getPlayers()
-    {
-        $players = [];
-        foreach ($this->players as $player) {
-            $players[] = [
-                "id" => $player->getId(),
-                "name" => $player->getName(),
-            ];
-        }
-        $this->players->rewind();
-        return $players;
-    }
-
-    protected function resetGame()
-    {
-        $this->stackProvider->setCounter(1);
-        $this->stack = [];
-        $this->reserve = [];
-        $this->discardPile = [];
-        $this->protectedPlayers = [];
-        $this->outOfGameCards = [];
-        $this->activeCard = null;
-        $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
-        $this->winners = [];
-        $this->outOfGamePlayers = [];
-        $this->gameFinished = false;
-        $this->activePlayer = null;
-        foreach ($this->players as $player) {
-            if ($player->getGameState()) {
-                $player->getGameState()->reset();
-            }
-        }
-        $this->players->rewind();
-    }
-
-    protected function drawCardForActivePlayer()
-    {
-        /** @var PlayerState $gameState */
-        $gameState = $this->activePlayer->getGameState();
-        $gameState->addCard($this->drawCard());
-    }
-
-    protected function drawCard($useReserve = false)
-    {
-        $card = array_pop($this->stack);
-        if (is_null($card)) {
-            if ($useReserve) {
-                return array_pop($this->reserve);
-            } else {
-                return false;
-            }
-        }
-        return $card;
-    }
-
-    protected function transferCard(&$from, &$to, $index = 0)
-    {
-        if (is_null($to) || is_string(key($to))) {
-            $to = array_splice($from, $index, 1)[0];
-            return $to;
-        } else {
-            $to[] = array_splice($from, $index, 1)[0];
-            return $to[count($to) - 1];
-        }
-    }
-
-    /**
-     * @return bool|Player
-     */
-    protected function getNextPlayer()
-    {
-        // First find the active player
-        while (true) {
-            if (!$this->players->valid()) {
-                $this->players->rewind();
-            }
-            $player = $this->players->current();
-            if ($player->getId() == $this->activePlayer->getId()) {
-                $this->players->next();
-                // Now find the next player who is not out of the game
-                while (true) {
-                    if (!$this->players->valid()) {
-                        $this->players->rewind();
-                    }
-                    if (in_array($this->players->current()->getId(), $this->outOfGamePlayers)) {
-                        $this->players->next();
-                    } else {
-                        /** @var Player $nextPlayer */
-                        $nextPlayer = $this->players->current();
-                        $this->players->rewind();
-                        return $nextPlayer;
-                    }
-                }
-            }
-            $this->players->next();
-        }
-        return false;
-    }
-
-
-    /**
-     * @param $id
-     * @return bool|Player
-     */
-    protected function getPlayerById($id)
-    {
-        /** @var Player $player */
-        foreach ($this->players as $player) {
-            if ($player->getId() == $id) {
-                $this->players->rewind();
-                return $player;
-            }
-        }
-        $this->players->rewind();
-        return false;
-    }
-
     protected function handleEffectAction($params = [])
     {
         switch ($this->activeCard['name']) {
@@ -554,9 +415,6 @@ class LoveLetter implements GameInterface
                 break;
             case 'Prinzessin':
                 $this->princessEffect();
-                break;
-            default:
-                // do nothing
         }
     }
 
@@ -591,7 +449,7 @@ class LoveLetter implements GameInterface
         $chosenPlayerCard = array_slice($chosenPlayerState->getCards(), 0, 1)[0];
         if ($card === $chosenPlayerCard['name']) {
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
-            if ($this->gameIsFinished()) {
+            if ($this->isGameFinished()) {
                 return;
             } else {
                 $cards = $chosenPlayerState->getCards();
@@ -668,7 +526,7 @@ class LoveLetter implements GameInterface
                 break;
             case 1:
                 $this->outOfGamePlayers[] = $enemy->getId();
-                if ($this->gameIsFinished()) {
+                if ($this->isGameFinished()) {
                     return;
                 } else {
                     $this->status = 'Die Karte von ' . $this->activePlayer->getName() . ' war höher! ';
@@ -676,7 +534,7 @@ class LoveLetter implements GameInterface
                 break;
             case -1:
                 $this->outOfGamePlayers[] = $this->activePlayer->getId();
-                if ($this->gameIsFinished()) {
+                if ($this->isGameFinished()) {
                     return;
                 } else {
                     $this->status = 'Die Karte von ' . $enemy->getName() . ' war höher! ';
@@ -718,7 +576,7 @@ class LoveLetter implements GameInterface
         $this->status = 'Die Karte ' . $card['name'] . ' von ' . $chosenPlayer->getName() . ' wurde abgeworfen ';
         if ($card['name'] === 'Prinzessin') {
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
-            if ($this->gameIsFinished()) {
+            if ($this->isGameFinished()) {
                 return;
             }
             $this->status .= 'und ist deshalb ausgeschieden. ';
@@ -782,7 +640,7 @@ class LoveLetter implements GameInterface
     protected function princessEffect()
     {
         $this->outOfGamePlayers[] = $this->activePlayer->getId();
-        if ($this->gameIsFinished()) {
+        if ($this->isGameFinished()) {
             return;
         } else {
             $this->waitFor = self::WAIT_FOR_CONFIRM_DISCARD_CARD;
@@ -790,4 +648,171 @@ class LoveLetter implements GameInterface
         }
     }
 
+    protected function isGameFinished()
+    {
+        // If there is only one player left, he has won.
+        if (count($this->outOfGamePlayers) === $this->players->count() - 1) {
+            $this->finishGame();
+            $victoriousPlayer = $this->getNextPlayer();
+            $this->winners[] = $victoriousPlayer->getId();
+            $this->status = $victoriousPlayer->getName() . " hat gewonnen!";
+            return true;
+        }
+
+        // If there are no cards left at the end of someones turn, players with the highest card win.
+        if (count($this->stack) === 0) {
+            $this->finishGame();
+            $highestValue = 0;
+            /** @var Player $player */
+            foreach ($this->players as $player) {
+                /** @var PlayerState $state */
+                $state = $player->getGameState();
+                $card = array_slice($state->getCards(), 0, 1)[0];
+                $currentValue = $card['value'];
+                if ($currentValue > $highestValue) {
+                    $highestValue = $currentValue;
+                }
+            }
+            $this->players->rewind();
+            foreach ($this->players as $player) {
+                /** @var PlayerState $state */
+                $state = $player->getGameState();
+                $card = array_slice($state->getCards(), 0, 1)[0];
+                if ($card['value'] === $highestValue) {
+                    $this->winners[] = $player->getId();
+                } else {
+                    $this->outOfGamePlayers[] = $player->getId();
+                }
+            }
+            $victoriousPlayer = [];
+            foreach ($this->winners as $winner) {
+                $victoriousPlayer[] = $this->getPlayerById($winner)->getName();
+            }
+            $this->status = 'Gewinner: ' . implode(', ', $victoriousPlayer);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param Player $player
+     * @return bool
+     */
+    protected function isPlayerSelectable($player)
+    {
+        return $player->getId() !== $this->getPlayerTurn()
+            && !in_array($player->getId(), $this->outOfGamePlayers)
+            && !in_array($player->getId(), $this->protectedPlayers);
+    }
+
+    protected function getResolvedAction()
+    {
+        if ($this->waitFor === self::WAIT_FOR_CHOOSE_PLAYER) {
+            /** @var Player $player */
+            foreach ($this->players as $player) {
+                if ($this->isPlayerSelectable($player)) {
+                    return $this->waitFor;
+                }
+            }
+            return self::WAIT_FOR_CONFIRM_DISCARD_CARD;
+        }
+        return $this->waitFor;
+    }
+
+    protected function getGlobalState()
+    {
+        $visibleDiscardedCard = [];
+        $numDicardedCards = count($this->discardPile);
+        if ($numDicardedCards > 0) {
+            $visibleDiscardedCard = [$this->discardPile[$numDicardedCards - 1]];
+        }
+        $playerTurn = $this->activePlayer ? $this->getPlayerTurn() : '';
+        return [
+            'gameStarted' => $this->gameStarted,
+            'gameFinished' => $this->gameFinished,
+            'playerTurn' => $playerTurn,
+            'waitFor' => $this->waitFor,
+            'status' => $this->status,
+            'activeCard' => $this->activeCard,
+            'outOfGameCards' => $this->outOfGameCards,
+            'discardPile' => $visibleDiscardedCard,
+            'protectedPlayers' => $this->protectedPlayers,
+            'outOfGamePlayers' => $this->outOfGamePlayers,
+            'winners' => $this->winners,
+            'guardianEffectSelectableCards' => $this->guardianEffect['selectableCards'],
+            'guardianEffectChosenPlayer' => $this->guardianEffect['name'],
+        ];
+    }
+
+    /**
+     * @return bool|Player
+     */
+    protected function getNextPlayer()
+    {
+        // First find the active player
+        while (true) {
+            if (!$this->players->valid()) {
+                $this->players->rewind();
+            }
+            $player = $this->players->current();
+            if ($player->getId() == $this->activePlayer->getId()) {
+                $this->players->next();
+                // Now find the next player who is not out of the game
+                while (true) {
+                    if (!$this->players->valid()) {
+                        $this->players->rewind();
+                    }
+                    if (in_array($this->players->current()->getId(), $this->outOfGamePlayers)) {
+                        $this->players->next();
+                    } else {
+                        /** @var Player $nextPlayer */
+                        $nextPlayer = $this->players->current();
+                        $this->players->rewind();
+                        return $nextPlayer;
+                    }
+                }
+            }
+            $this->players->next();
+        }
+        return false;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPlayers()
+    {
+        $players = [];
+        foreach ($this->players as $player) {
+            $players[] = [
+                "id" => $player->getId(),
+                "name" => $player->getName(),
+            ];
+        }
+        $this->players->rewind();
+        return $players;
+    }
+
+    /**
+     * @param $id
+     * @return bool|Player
+     */
+    protected function getPlayerById($id)
+    {
+        /** @var Player $player */
+        foreach ($this->players as $player) {
+            if ($player->getId() == $id) {
+                $this->players->rewind();
+                return $player;
+            }
+        }
+        $this->players->rewind();
+        return false;
+    }
+
+    protected function getPlayerTurn()
+    {
+        return $this->activePlayer->getId();
+    }
 }
