@@ -76,4 +76,11 @@ class MockStackProvider extends StackProvider
         $this->insertCards($stack, LoveLetter::BARONCARD, 1);
         $this->insertCards($stack, LoveLetter::PRINCECARD, 1);
     }
+
+    protected function kingStack(&$stack)
+    {
+        $this->insertCards($stack, LoveLetter::BARONCARD, 5);
+        $this->insertCards($stack, LoveLetter::PRINCECARD, 1);
+        $this->insertCards($stack, LoveLetter::KINGCARD, 1);
+    }
 }
