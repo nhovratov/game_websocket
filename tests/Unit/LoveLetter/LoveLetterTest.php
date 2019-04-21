@@ -458,4 +458,38 @@ class LoveLetterTest extends TestCase
         $this->assertTrue($state['gameFinished']);
         $this->assertContains(1, $state['winners']);
     }
+
+    /**
+     * @test
+     */
+    public function testCountess()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('countess');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1);
+        $john->setName('John');
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2);
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        $this->assertEquals('Prinz', current($mikel->getGameState()->getCards())['name']);
+
+        // John begins
+        $game->handleAction(['id' => 1]);
+
+        // John chooses prince card (invalid)
+        $game->handleAction(['key' => 1]);
+
+        $this->assertCount(2, $john->getGameState()->getCards());
+
+        // Ok, John have to choose the countess ...
+        $game->handleAction(['key' => 7]);
+
+        $this->assertCount(1, $john->getGameState()->getCards());
+    }
 }

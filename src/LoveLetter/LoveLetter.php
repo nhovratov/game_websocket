@@ -433,6 +433,9 @@ class LoveLetter implements GameInterface
         /** @var PlayerState $gameState */
         $gameState = $this->activePlayer->getGameState();
         $cards = $gameState->getCards();
+        if (!Validator::validateCardCanBeSet($cards, $key)) {
+            return false;
+        }
         $this->activeCard = $cards[$key];
         $index = array_search($key, array_keys($cards));
         array_slice($cards, $index, 1);
