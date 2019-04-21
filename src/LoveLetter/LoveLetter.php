@@ -427,8 +427,17 @@ class LoveLetter implements GameInterface
         $this->status = "{$this->activePlayer->getName()} ist dran ...";
     }
 
+    /**
+     * Expected command: [key => 13]
+     *
+     * @param $params
+     * @return bool
+     */
     protected function activateCardAction($params)
     {
+        if (!key_exists('key', $params)) {
+            return false;
+        }
         $key = $params['key'];
         /** @var PlayerState $gameState */
         $gameState = $this->activePlayer->getGameState();

@@ -78,6 +78,36 @@ class LoveLetterTest extends TestCase
         $this->assertCount(0, $state['outOfGameCards']);
     }
 
+    /**
+     * @test
+     */
+    public function testSelectInvalidCardId()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('guardian');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1);
+        $john->setName('John');
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2);
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        // John begins
+        $game->handleAction(['id' => 1]);
+
+        // Send wrong params
+        $game->handleAction(['bla' => 1337]);
+
+        // Send invalid key
+        $game->handleAction(['key' => 1337]);
+
+        $state = $game->getGlobalState();
+        $this->assertEquals(LoveLetter::CHOOSE_CARD, $state['waitFor']);
+    }
 
     /**
      * @test
