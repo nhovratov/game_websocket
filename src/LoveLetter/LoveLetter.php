@@ -363,9 +363,6 @@ class LoveLetter implements GameInterface
 
     protected function nextTurn()
     {
-        if ($this->isGameFinished()) {
-            return;
-        }
         $this->activePlayer = $this->getNextPlayer();
         if (in_array($this->activePlayer->getId(), $this->protectedPlayers)) {
             /** @var PlayerState $gameState */
@@ -496,15 +493,8 @@ class LoveLetter implements GameInterface
             case 'Prinzessin':
                 $this->princessEffect();
         }
-
-        // Check for finished game after each card effect
-        // TODO Skip no game winning cards and end game before effect takes effect
-        if ($this->waitFor === self::CHOOSE_PLAYER) {
-            !$this->isAnyOtherPlayerSelectable() && $this->isGameFinished();
-        }
-        if ($this->waitFor === self::CONFIRM_DISCARD_CARD) {
-            $this->isGameFinished();
-        }
+        // After each end of effect, we check if the game is finished by now
+        $this->isGameFinished();
     }
 
     /**
@@ -538,21 +528,16 @@ class LoveLetter implements GameInterface
         $chosenPlayerCard = array_slice($chosenPlayerState->getCards(), 0, 1)[0];
         if ($card === $chosenPlayerCard['name']) {
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
-            if ($this->isGameFinished()) {
-                return;
-            } else {
-                $cards = $chosenPlayerState->getCards();
-                $this->transferCard($cards, $this->discardPile, 0);
-                $chosenPlayerState->setCards($cards);
-                $this->status = $card . '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
-            }
+            $cards = $chosenPlayerState->getCards();
+            $this->transferCard($cards, $this->discardPile, 0);
+            $chosenPlayerState->setCards($cards);
+            $this->status = $card . '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ';
         } else {
             $this->status = $card . '! Falsch geraten! ';
         }
         $this->status .= $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
         $this->waitFor = self::CONFIRM_DISCARD_CARD;
         $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
-        $this->isGameFinished();
     }
 
     /**
@@ -616,19 +601,11 @@ class LoveLetter implements GameInterface
                 break;
             case 1:
                 $this->outOfGamePlayers[] = $enemy->getId();
-                if ($this->isGameFinished()) {
-                    return;
-                } else {
-                    $this->status = 'Die Karte von ' . $this->activePlayer->getName() . ' war höher! ';
-                }
+                $this->status = 'Die Karte von ' . $this->activePlayer->getName() . ' war höher! ';
                 break;
             case -1:
                 $this->outOfGamePlayers[] = $this->activePlayer->getId();
-                if ($this->isGameFinished()) {
-                    return;
-                } else {
-                    $this->status = 'Die Karte von ' . $enemy->getName() . ' war höher! ';
-                }
+                $this->status = 'Die Karte von ' . $enemy->getName() . ' war höher! ';
                 break;
         }
 
@@ -666,9 +643,6 @@ class LoveLetter implements GameInterface
         $this->status = 'Die Karte ' . $card['name'] . ' von ' . $chosenPlayer->getName() . ' wurde abgeworfen ';
         if ($card['name'] === 'Prinzessin') {
             $this->outOfGamePlayers[] = $chosenPlayer->getId();
-            if ($this->isGameFinished()) {
-                return;
-            }
             $this->status .= 'und ist deshalb ausgeschieden. ';
         } else {
             $gameState->setCards($cards);
@@ -730,16 +704,21 @@ class LoveLetter implements GameInterface
     protected function princessEffect()
     {
         $this->outOfGamePlayers[] = $this->activePlayer->getId();
-        if ($this->isGameFinished()) {
-            return;
-        } else {
-            $this->waitFor = self::CONFIRM_DISCARD_CARD;
-            $this->status = $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
-        }
+        $this->waitFor = self::CONFIRM_DISCARD_CARD;
+        $this->status = $this->activePlayer->getName() . ' muss seine Karte auf den Ablagestapel legen ...';
     }
 
     protected function isGameFinished()
     {
+        // The only states, where the game can be determined as finished
+        if (!in_array($this->waitFor, [self::CHOOSE_PLAYER, self::CONFIRM_DISCARD_CARD])) {
+            return false;
+        }
+
+        if ($this->waitFor === self::CHOOSE_PLAYER && $this->isAnyOtherPlayerSelectable()) {
+            return false;
+        }
+
         // If there is only one player left, he has won.
         if (count($this->outOfGamePlayers) === $this->players->count() - 1) {
             $this->finishGame();
