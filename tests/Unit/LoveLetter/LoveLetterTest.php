@@ -255,7 +255,7 @@ class LoveLetterTest extends TestCase
         $state = $game->getGlobalState();
         $this->assertTrue($state['gameFinished']);
         $this->assertCount(1, $state['winners']);
-        $this->assertEquals(2, $state['outOfGamePlayers'][0]);
+        $this->assertContains(2, $state['outOfGamePlayers']);
         $this->assertEquals($game::START_NEW_GAME, $state['waitFor']);
     }
 
@@ -290,7 +290,7 @@ class LoveLetterTest extends TestCase
         $state = $game->getGlobalState();
         $this->assertTrue($state['gameFinished']);
         $this->assertCount(1, $state['winners']);
-        $this->assertEquals(2, $state['outOfGamePlayers'][0]);
+        $this->assertContains(2, $state['outOfGamePlayers']);
         $this->assertEquals($game::START_NEW_GAME, $state['waitFor']);
     }
 
@@ -324,5 +324,31 @@ class LoveLetterTest extends TestCase
         // Johns card 'princess(8)' is equal to Mikels card 'princess(8)'
         $state = $game->getGlobalState();
         $this->assertFalse($state['gameFinished']);
+    }
+
+    public function testPrincess()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('princess');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1);
+        $john->setName('John');
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2);
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        // John begins
+        $game->handleAction(['id' => 1]);
+
+        // John chooses princess
+        $game->handleAction(['key' => 10]);
+
+        $state = $game->getGlobalState();
+        $this->assertTrue($state['gameFinished']);
+        $this->assertContains(2, $state['winners']);
     }
 }
