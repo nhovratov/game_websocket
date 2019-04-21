@@ -9,9 +9,9 @@ use MyApp\LoveLetter\LoveLetter;
  */
 class King extends AbstractCard implements EffectInterface
 {
-    const NAME = 'König';
-    const VALUE = 6;
-    const TEXT = 'Tausche deine Handkarte mit der eines Mitspielers.';
+    public static $name = 'König';
+    public static $value = 6;
+    public static $text = 'Tausche deine Handkarte mit der eines Mitspielers.';
 
     public static function activate(LoveLetter $game, $params = [])
     {

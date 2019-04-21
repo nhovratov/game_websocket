@@ -9,9 +9,9 @@ use MyApp\LoveLetter\LoveLetter;
  */
 class Baron extends AbstractCard implements EffectInterface
 {
-    const NAME = 'Baron';
-    const VALUE = 8;
-    const TEXT = 'Vergleiche deine Handkarte mit der eines Mitspielers. Der Spieler mit dem niedrigeren Wert scheidet aus ...';
+    public static $name = 'Baron';
+    public static $value = 2;
+    public static $text = 'Vergleiche deine Handkarte mit der eines Mitspielers. Der Spieler mit dem niedrigeren Wert scheidet aus ...';
 
     public static function activate(LoveLetter $game, $params = [])
     {

@@ -22,55 +22,6 @@ use MyApp\StateInterface;
 
 class LoveLetter implements GameInterface
 {
-
-    const GUARDIANCARD = [
-        'name' => 'Wächterin',
-        'value' => 1,
-        'effect' => 'Errätst du die Handkarte eines Mitspielers, scheidet dieser aus ... Gilt nicht für "Wächterin"!'
-    ];
-
-    const PRIESTCARD = [
-        'name' => 'Priester',
-        'value' => 2,
-        'effect' => 'Schaue dir die Handkarte eines Mitspielers an.'
-    ];
-
-    const BARONCARD = [
-        'name' => 'Baron',
-        'value' => 3,
-        'effect' => 'Vergleiche deine Handkarte mit der eines Mitspielers. Der Spieler mit dem niedrigeren Wert scheidet aus ...'
-    ];
-
-    const MAIDCARD = [
-        'name' => 'Zofe',
-        'value' => 4,
-        'effect' => 'Du bist bis zu deinem nächsten Zug geschützt.'
-    ];
-
-    const PRINCECARD = [
-        'name' => 'Prinz',
-        'value' => 5,
-        'effect' => 'Wähle einen Spieler, der seine Handkarte ablegt und eine neue Karte zieht.'
-    ];
-
-    const KINGCARD = [
-        'name' => 'König',
-        'value' => 6,
-        'effect' => 'Tausche deine Handkarte mit der eines Mitspielers.'
-    ];
-
-    const COUNTESSCARD = [
-        'name' => 'Gräfin',
-        'value' => 7,
-        'effect' => 'Wenn du zusätzlich König oder Prinz auf der Hand hast, musst du die Gräfin ausspielen.'
-    ];
-
-    const PRINCESSCARD = [
-        'name' => 'Prinzessin',
-        'value' => 8,
-        'effect' => 'Wenn du die Prinzessin ablegst, scheidest du aus ...'
-    ];
-
     const GUARDIANCOUNT = 5;
     const PRIESTCOUNT = 2;
     const BARONCOUNT = 2;

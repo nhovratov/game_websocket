@@ -9,9 +9,9 @@ use MyApp\LoveLetter\LoveLetter;
  */
 class Guardian extends AbstractCard implements EffectInterface
 {
-    const NAME = 'Wächterin';
-    const VALUE = 1;
-    const TEXT = 'Errätst du die Handkarte eines Mitspielers, scheidet dieser aus ... Gilt nicht für "Wächterin"!';
+    public static $name = 'Wächterin';
+    public static $value = 1;
+    public static $text = 'Errätst du die Handkarte eines Mitspielers, scheidet dieser aus ... Gilt nicht für "Wächterin"!';
 
     public static function activate(LoveLetter $game, $params = [])
     {

@@ -9,6 +9,10 @@
 namespace MyApp\LoveLetter;
 
 
+use MyApp\LoveLetter\Card\Countess;
+use MyApp\LoveLetter\Card\King;
+use MyApp\LoveLetter\Card\Prince;
+
 class Validator
 {
     public static function validateCardCanBeSet($cards, $chosenCard)
@@ -25,17 +29,8 @@ class Validator
 
         // Wenn Prinz oder König gewählt wurde und man zusätzlich die Gräfin in der Hand hält
         if (
-            in_array(
-                $chosenCardName,
-                [
-                    LoveLetter::PRINCECARD['name'],
-                    LoveLetter::KINGCARD['name']
-                ]
-            )
-            && in_array(
-                LoveLetter::COUNTESSCARD['name'],
-                $cardNames
-            )
+            in_array($chosenCardName, [Prince::$name, King::$name])
+            && in_array(Countess::$name, $cardNames)
         ) {
             return false;
         }

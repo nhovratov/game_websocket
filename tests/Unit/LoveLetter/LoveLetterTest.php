@@ -6,6 +6,9 @@
  * Time: 23:44
  */
 
+use MyApp\LoveLetter\Card\Baron;
+use MyApp\LoveLetter\Card\Guardian;
+use MyApp\LoveLetter\Card\Priest;
 use MyApp\LoveLetter\LoveLetter;
 use MyApp\Mock\MockStackProvider;
 use MyApp\Player;
@@ -52,11 +55,11 @@ class LoveLetterTest extends TestCase
         $this->assertCount(1, $playerState->getCards());
         $cards = $playerState->getCards();
         $handCard = current($cards);
-        $this->assertEquals('Wächterin', $handCard['name']);
+        $this->assertEquals(Guardian::$name, $handCard['name']);
 
-        $this->assertEquals('Wächterin', $state['outOfGameCards'][0]['name']);
-        $this->assertEquals('Wächterin', $state['outOfGameCards'][1]['name']);
-        $this->assertEquals('Wächterin', $state['outOfGameCards'][2]['name']);
+        $this->assertEquals(Guardian::$name, $state['outOfGameCards'][0]['name']);
+        $this->assertEquals(Guardian::$name, $state['outOfGameCards'][1]['name']);
+        $this->assertEquals(Guardian::$name, $state['outOfGameCards'][2]['name']);
     }
 
     /**
@@ -105,7 +108,6 @@ class LoveLetterTest extends TestCase
         // Send invalid key
         $game->handleAction(['key' => 1337]);
 
-        $state = $game->getGlobalState();
         $this->assertEquals(LoveLetter::CHOOSE_CARD, $game->getWaitFor());
     }
 
@@ -141,7 +143,6 @@ class LoveLetterTest extends TestCase
 
         // Select Mikel for Effect card
         $game->handleAction(['id' => 2]);
-        $state = $game->getGlobalState();
         $this->assertEquals($game::CHOOSE_GUARDIAN_EFFECT_CARD, $game->getWaitFor());
 
         // Select Baron (wrong)
@@ -226,10 +227,9 @@ class LoveLetterTest extends TestCase
 
         // John chooses Mikel to look into his card
         $game->handleAction(['id' => 2]);
-        $state = $game->getGlobalState();
         $this->assertEquals($game::FINISH_LOOKING_AT_CARD, $game->getWaitFor());
         $johnState = $john->getGameState();
-        $this->assertEquals('Priester', $johnState->getPriestEffectVisibleCard());
+        $this->assertEquals(Priest::$name, $johnState->getPriestEffectVisibleCard());
 
         // John finishes looking at Mikels cards and discards his card
         $game->handleAction();
@@ -482,7 +482,7 @@ class LoveLetterTest extends TestCase
         $game->handleAction(['id' => 2]);
 
         // Mikel swaps his prince with a baron
-        $this->assertEquals('Baron', current($mikel->getGameState()->getCards())['name']);
+        $this->assertEquals(Baron::$name, current($mikel->getGameState()->getCards())['name']);
 
         $state = $game->getGlobalState();
         $this->assertTrue($state['gameFinished']);
