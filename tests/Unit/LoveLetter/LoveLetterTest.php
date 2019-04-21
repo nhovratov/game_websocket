@@ -326,6 +326,9 @@ class LoveLetterTest extends TestCase
         $this->assertFalse($state['gameFinished']);
     }
 
+    /**
+     * @test
+     */
     public function testPrincess()
     {
         $players = new SplObjectStorage();
@@ -350,5 +353,72 @@ class LoveLetterTest extends TestCase
         $state = $game->getGlobalState();
         $this->assertTrue($state['gameFinished']);
         $this->assertContains(2, $state['winners']);
+    }
+
+    /**
+     * @test
+     */
+    public function testPrinceLoose()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('princeLoose');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1);
+        $john->setName('John');
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2);
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        // John begins
+        $game->handleAction(['id' => 1]);
+
+        // John chooses price card
+        $game->handleAction(['key' => 12]);
+
+        // John chooses Mikel to discard his card
+        $game->handleAction(['id' => 2]);
+
+        // Mikel discards his princess and the game is over
+        $state = $game->getGlobalState();
+        $this->assertTrue($state['gameFinished']);
+        $this->assertContains(1, $state['winners']);
+    }
+
+    /**
+     * @test
+     */
+    public function testPrinceNormal()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('princeNormal');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1);
+        $john->setName('John');
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2);
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        // John begins
+        $game->handleAction(['id' => 1]);
+
+        // John chooses price card
+        $game->handleAction(['key' => 12]);
+
+        // John chooses Mikel to discard his card
+        $game->handleAction(['id' => 2]);
+
+        // Mikel discards his baron and draws a king
+        $this->assertEquals('König', current($mikel->getGameState()->getCards())['name']);
+        $state = $game->getGlobalState();
+        $this->assertFalse($state['gameFinished']);
+        $this->assertEmpty( $state['winners']);
     }
 }
