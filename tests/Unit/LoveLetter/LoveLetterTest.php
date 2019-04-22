@@ -487,6 +487,7 @@ class LoveLetterTest extends TestCase
         $state = $game->getGlobalState();
         $this->assertTrue($state['gameFinished']);
         $this->assertContains(1, $state['winners']);
+        $this->assertContains(2, $state['outOfGamePlayers']);
     }
 
     /**

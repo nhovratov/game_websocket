@@ -9,6 +9,7 @@ use MyApp\LoveLetter\LoveLetter;
  */
 class Maid extends AbstractCard implements EffectInterface
 {
+    public static $id = 4;
     public static $name = 'Zofe';
     public static $value = 4;
     public static $text = 'Du bist bis zu deinem nächsten Zug geschützt.';

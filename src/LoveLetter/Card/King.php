@@ -9,6 +9,7 @@ use MyApp\LoveLetter\LoveLetter;
  */
 class King extends AbstractCard implements EffectInterface
 {
+    public static $id = 6;
     public static $name = 'König';
     public static $value = 6;
     public static $text = 'Tausche deine Handkarte mit der eines Mitspielers.';
@@ -28,12 +29,10 @@ class King extends AbstractCard implements EffectInterface
         // Swap cards
         $activePlayerCards = $activePlayerState->getCards();
         $chosenPlayerCards = $chosenPlayerState->getCards();
-        $activePlayerCard = array_slice($activePlayerCards, 0, 1)[0];
-        unset($activePlayerCards[$activePlayerCard['id']]);
-        $chosenPlayerCard = array_slice($chosenPlayerCards, 0, 1)[0];
-        unset($chosenPlayerCards[$chosenPlayerCard['id']]);
-        $chosenPlayerCards[$activePlayerCard['id']] = $activePlayerCard;
-        $activePlayerCards[$chosenPlayerCard['id']] = $chosenPlayerCard;
+        $activePlayerCard = array_splice($activePlayerCards, 0, 1)[0];
+        $chosenPlayerCard = array_splice($chosenPlayerCards, 0, 1)[0];
+        $chosenPlayerCards[$activePlayerCard['cardnumber']] = $activePlayerCard;
+        $activePlayerCards[$chosenPlayerCard['cardnumber']] = $chosenPlayerCard;
         $chosenPlayerState->setCards($chosenPlayerCards);
         $activePlayerState->setCards($activePlayerCards);
 

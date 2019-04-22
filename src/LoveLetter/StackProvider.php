@@ -29,10 +29,10 @@ class StackProvider
         return $stack;
     }
 
-    protected function insertCards(&$stack, $card, $count = 1)
+    protected function insertCards(&$stack, $card, $count)
     {
         for ($i = 0; $i < $count; $i++) {
-            $card['id'] = $this->counter;
+            $card['cardnumber'] = $this->counter;
             $stack[] = $card;
             $this->counter += 1;
         }

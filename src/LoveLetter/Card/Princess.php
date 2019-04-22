@@ -9,6 +9,7 @@ use MyApp\LoveLetter\LoveLetter;
  */
 class Princess extends AbstractCard implements EffectInterface
 {
+    public static $id = 8;
     public static $name = 'Prinzessin';
     public static $value = 8;
     public static $text = 'Wenn du die Prinzessin ablegst, scheidest du aus ...';

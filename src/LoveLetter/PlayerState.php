@@ -55,7 +55,7 @@ class PlayerState implements StateInterface
      */
     public function addCard($card)
     {
-        $this->cards[$card['id']] = $card;
+        $this->cards[$card['cardnumber']] = $card;
     }
 
     public function addOpenEffectCard($card)

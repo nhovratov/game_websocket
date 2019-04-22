@@ -41,6 +41,17 @@ class LoveLetter implements GameInterface
     const FINISH_LOOKING_AT_CARD = 'finishLookingAtCard';
     const PLACE_MAID_CARD = 'placeMaidCard';
 
+    const CARDS = [
+        1 => Guardian::class,
+        2 => Baron::class,
+        3 => Priest::class,
+        4 => Maid::class,
+        5 => Prince::class,
+        6 => King::class,
+        7 => Countess::class,
+        8 => Princess::class
+    ];
+
     const GUARDIAN_EFFECT_DEFAULT = [
         'name' => '',
         'selectableCards' => [
@@ -427,31 +438,8 @@ class LoveLetter implements GameInterface
 
     protected function handleEffectAction($params = [])
     {
-        switch ($this->activeCard['name']) {
-            case 'Wächterin':
-                Guardian::activate($this, $params);
-                break;
-            case 'Priester':
-                Priest::activate($this, $params);
-                break;
-            case 'Baron':
-                Baron::activate($this, $params);
-                break;
-            case 'Zofe':
-                Maid::activate($this, $params);
-                break;
-            case 'Prinz':
-                Prince::activate($this, $params);
-                break;
-            case 'König':
-                King::activate($this, $params);
-                break;
-            case 'Gräfin':
-                Countess::activate($this, $params);
-                break;
-            case 'Prinzessin':
-                Princess::activate($this, $params);
-        }
+        $cardClass = self::CARDS[$this->activeCard['id']];
+        $cardClass::activate($this, $params);
         // After each end of effect, we check if the game is finished by now
         $this->isGameFinished();
     }
