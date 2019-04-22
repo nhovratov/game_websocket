@@ -228,11 +228,12 @@ class LoveLetter implements GameInterface
             if (!$player->getClient()) {
                 continue;
             }
-            $player->getGameState()->setAllowedAction($this->getAllowedActionByPlayer($player));
+            $gameState = $player->getGameState();
+            $gameState->setAllowedAction($this->getAllowedActionByPlayer($player));
             $msg = [
                 'dataType' => 'game',
                 'global' => $this->getGlobalState(),
-                'local' => $player->getGameState()->getState()
+                'local' => $gameState->getState()
             ];
             if ($playerinfo) {
                 $msg['global']['players'] = $playerinfo;
