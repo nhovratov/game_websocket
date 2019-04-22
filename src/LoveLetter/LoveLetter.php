@@ -172,7 +172,6 @@ class LoveLetter implements GameInterface
         $this->gameStarted = true;
         /** @var Player $player */
         foreach ($this->players as $player) {
-            $player->setGameState(new PlayerState());
             $gameState = new PlayerState();
             $gameState->addCard($this->drawCard());
             $player->setGameState($gameState);
