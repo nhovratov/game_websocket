@@ -31,13 +31,13 @@ class LoveLetter implements GameInterface
     const COUNTESSCOUNT = 1;
     const PRINCESSCOUNT = 1;
 
+    const START_NEW_GAME = 'startNewGame';
     const SELECT_FIRST_PLAYER = 'selectFirstPlayer';
     const CHOOSE_CARD = 'chooseCard';
     const CHOOSE_PLAYER = 'choosePlayer';
     const CHOOSE_ANY_PLAYER = 'chooseAnyPlayer';
     const CHOOSE_GUARDIAN_EFFECT_CARD = 'chooseGuardianEffectCard';
     const CONFIRM_DISCARD_CARD = 'confirmDiscardCard';
-    const START_NEW_GAME = 'startNewGame';
     const FINISH_LOOKING_AT_CARD = 'finishLookingAtCard';
     const PLACE_MAID_CARD = 'placeMaidCard';
 
@@ -186,26 +186,20 @@ class LoveLetter implements GameInterface
             $action = $this->waitFor;
         }
         switch ($action) {
+            case self::CHOOSE_PLAYER:
+            case self::CHOOSE_GUARDIAN_EFFECT_CARD:
+            case self::FINISH_LOOKING_AT_CARD:
+            case self::CHOOSE_ANY_PLAYER:
+                $this->handleEffectAction($params);
+                break;
             case self::CHOOSE_CARD:
                 $this->activateCardAction($params);
                 break;
             case self::CONFIRM_DISCARD_CARD:
                 $this->discardActiveCardAction();
                 break;
-            case self::CHOOSE_PLAYER:
-                $this->handleEffectAction($params);
-                break;
-            case self::CHOOSE_GUARDIAN_EFFECT_CARD:
-                $this->handleEffectAction($params);
-                break;
-            case self::FINISH_LOOKING_AT_CARD:
-                $this->handleEffectAction();
-                break;
             case self::PLACE_MAID_CARD:
                 $this->placeMaidCardAction();
-                break;
-            case self::CHOOSE_ANY_PLAYER:
-                $this->handleEffectAction($params);
                 break;
             case self::SELECT_FIRST_PLAYER:
                 $this->setupFirstTurnAction($params);
