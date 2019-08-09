@@ -19,7 +19,7 @@ class LoveLetterTest extends TestCase
 {
     protected $mockStackProvider;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mockStackProvider = new MockStackProvider();
     }
