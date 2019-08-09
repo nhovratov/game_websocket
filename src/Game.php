@@ -88,7 +88,17 @@ class Game implements MessageComponentInterface
     {
         $msg = json_decode($msg, true);
         if (isset($msg['id'])) {
-            $this->handlePlayer($from, $msg['id']);
+            if (!$this->playerExists($msg['id'])) {
+                $player = new Player($from, $msg['id']);
+                $this->players->attach($player);
+                if ($this->players->count() === 1) {
+                    $player->setIsHost(true);
+                    $this->globalState['hostid'] = $player->getId();
+                }
+            } elseif (!$this->getPlayerById($msg['id'])->getClient()) {
+                $player = $this->getPlayerById($msg['id']);
+                $player->setClient($from);
+            }
             if (isset($msg['name'])) {
                 $player = $this->getPlayerById($msg['id']);
                 $player->setName($msg['name']);
@@ -117,21 +127,6 @@ class Game implements MessageComponentInterface
             }
         }
         $this->update();
-    }
-
-    protected function handlePlayer($conn, $id)
-    {
-        if (!$this->playerExists($id)) {
-            $player = new Player($conn, $id);
-            $this->players->attach($player);
-            if ($this->players->count() === 1) {
-                $player->setIsHost(true);
-                $this->globalState['hostid'] = $player->getId();
-            }
-        } elseif (!$this->getPlayerById($id)->getClient()) {
-            $player = $this->getPlayerById($id);
-            $player->setClient($conn);
-        }
     }
 
     protected function update()
