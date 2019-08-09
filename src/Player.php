@@ -11,6 +11,7 @@ namespace MyApp;
 
 use MyApp\LoveLetter\LoveLetter;
 use Ratchet\ConnectionInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class Player
 {
@@ -39,10 +40,9 @@ class Player
      */
     protected $isHost = false;
 
-    public function __construct($client, $id)
+    public function __construct($client)
     {
         $this->client = $client;
-        $this->id = (int)$id;
     }
 
     public function getState($players)
@@ -74,9 +74,9 @@ class Player
     /**
      * @return mixed
      */
-    public function getId() : int
+    public function getId()
     {
-        return $this->id;
+        return $this->getSession()->get('id');
     }
 
     /**
@@ -132,4 +132,11 @@ class Player
         $this->isHost = $isHost;
     }
 
+    /**
+     * @return Session
+     */
+    protected function getSession()
+    {
+        return $this->client->Session;
+    }
 }

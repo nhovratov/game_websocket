@@ -11,6 +11,7 @@ namespace MyApp;
 use MyApp\LoveLetter\LoveLetter;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class Game implements MessageComponentInterface
 {
@@ -32,29 +33,34 @@ class Game implements MessageComponentInterface
 
     /**
      * When a new connection is opened it will be passed to this method
-     * @param  ConnectionInterface $conn The socket/connection that just connected to your application
+     * @param ConnectionInterface $conn The socket/connection that just connected to your application
      * @throws \Exception
      */
     function onOpen(ConnectionInterface $conn)
     {
-        // Store the new connection to send messages to later
+        echo $conn->resourceId;
+        /** @var Session $session */
+        $session = $conn->Session;
+        $session->start();
+        $sessionId = md5(time());
+        $session->set('id', $sessionId);
         $this->clients->attach($conn);
         $conn->send(json_encode([
             'global' => $this->globalState,
             'local' => [
-                'id' => $this->getUniqueId($conn->resourceId)
+                'id' => $sessionId
             ]
         ]));
     }
 
     /**
      * This is called before or after a socket is closed (depends on how it's closed).  SendMessage to $conn will not result in an error if it has already been closed.
-     * @param  ConnectionInterface $conn The socket/connection that is closing/closed
+     * @param ConnectionInterface $conn The socket/connection that is closing/closed
      * @throws \Exception
      */
     function onClose(ConnectionInterface $conn)
     {
-        // The connection is closed, remove it, as w can no longer send it messages
+        // The connection is closed, remove it, as we can no longer send it messages
         $this->clients->detach($conn);
         foreach ($this->players as $player) {
             if ($player->getClient() == $conn) {
@@ -68,8 +74,8 @@ class Game implements MessageComponentInterface
     /**
      * If there is an error with one of the sockets, or somewhere in the application where an Exception is thrown,
      * the Exception is sent back down the stack, handled by the Server and bubbled back up the application through this method
-     * @param  ConnectionInterface $conn
-     * @param  \Exception $e
+     * @param ConnectionInterface $conn
+     * @param \Exception $e
      * @throws \Exception
      */
     function onError(ConnectionInterface $conn, \Exception $e)
@@ -80,8 +86,8 @@ class Game implements MessageComponentInterface
 
     /**
      * Triggered when a client sends data through the socket
-     * @param  \Ratchet\ConnectionInterface $from The socket/connection that sent the message to your application
-     * @param  string $msg The message received
+     * @param \Ratchet\ConnectionInterface $from The socket/connection that sent the message to your application
+     * @param string $msg The message received
      * @throws \Exception
      */
     function onMessage(ConnectionInterface $from, $msg)
@@ -89,7 +95,7 @@ class Game implements MessageComponentInterface
         $msg = json_decode($msg, true);
         if (isset($msg['id'])) {
             if (!$this->playerExists($msg['id'])) {
-                $player = new Player($from, $msg['id']);
+                $player = new Player($from);
                 $this->players->attach($player);
                 if ($this->players->count() === 1) {
                     $player->setIsHost(true);
@@ -144,37 +150,38 @@ class Game implements MessageComponentInterface
         $this->game->updateState();
     }
 
-    protected function getUniqueId($id)
+    /**
+     * @param $id
+     * @return bool
+     */
+    protected function playerExists($id): bool
     {
         foreach ($this->players as $player) {
-            if ($player->getId() == $id) {
-                return $id + 1;
-            }
-        }
-        return $id;
-    }
-
-    protected function playerExists($id)
-    {
-        foreach ($this->players as $player) {
-            if ($player->getId() == $id) {
+            if ($player->getId() === $id) {
                 return true;
             }
         }
         return false;
     }
 
-    protected function getPlayerById($id)
+    /**
+     * @param $id
+     * @return object|null
+     */
+    protected function getPlayerById($id): ?Player
     {
         foreach ($this->players as $player) {
-            if ($player->getId() == $id) {
+            if ($player->getId() === $id) {
                 return $player;
             }
         }
-        return false;
+        return null;
     }
 
-    protected function getPlayers()
+    /**
+     * @return array
+     */
+    protected function getPlayers(): array
     {
         $players = [];
         foreach ($this->players as $player) {

@@ -9,16 +9,13 @@ use Symfony\Component\HttpFoundation\Session\Storage\Handler;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-$memcache = new Memcached();
-$memcache->addServer('localhost', 11211);
-
 $server = IoServer::factory(
     new HttpServer(
         new SessionProvider(
             new WsServer(
                 new Game()
             ),
-            new Handler\MemcachedSessionHandler($memcache)
+            new Handler\MemcachedSessionHandler(new Memcached())
         )
     ),
     8080
