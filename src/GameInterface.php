@@ -6,7 +6,7 @@
  * Time: 22:10
  */
 
-namespace MyApp;
+namespace NH;
 
 
 interface GameInterface

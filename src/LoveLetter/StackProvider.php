@@ -1,14 +1,14 @@
 <?php
 
-namespace MyApp\LoveLetter;
+namespace NH\LoveLetter;
 
-use MyApp\LoveLetter\Card\Baron;
-use MyApp\LoveLetter\Card\Countess;
-use MyApp\LoveLetter\Card\Guardian;
-use MyApp\LoveLetter\Card\King;
-use MyApp\LoveLetter\Card\Maid;
-use MyApp\LoveLetter\Card\Priest;
-use MyApp\LoveLetter\Card\Prince;
+use NH\LoveLetter\Card\Baron;
+use NH\LoveLetter\Card\Countess;
+use NH\LoveLetter\Card\Guardian;
+use NH\LoveLetter\Card\King;
+use NH\LoveLetter\Card\Maid;
+use NH\LoveLetter\Card\Priest;
+use NH\LoveLetter\Card\Prince;
 
 class StackProvider
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace MyApp\LoveLetter\Card;
+namespace NH\LoveLetter\Card;
 
-use MyApp\LoveLetter\LoveLetter;
+use NH\LoveLetter\LoveLetter;
 
 /**
  * Schaue dir die Handkarte eines Mitspielers an.

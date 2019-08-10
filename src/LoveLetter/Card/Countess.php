@@ -1,8 +1,8 @@
 <?php
 
-namespace MyApp\LoveLetter\Card;
+namespace NH\LoveLetter\Card;
 
-use MyApp\LoveLetter\LoveLetter;
+use NH\LoveLetter\LoveLetter;
 
 /**
  * Wenn du zusätzlich König oder Prinz auf der Hand hast, musst du die Gräfin ausspielen.

@@ -6,9 +6,9 @@
  * Time: 17:05
  */
 
-namespace MyApp\LoveLetter;
+namespace NH\LoveLetter;
 
-use MyApp\StateInterface;
+use NH\StateInterface;
 
 class PlayerState implements StateInterface
 {

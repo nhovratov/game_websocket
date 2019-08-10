@@ -6,9 +6,9 @@
  * Time: 19:57
  */
 
-namespace MyApp;
+namespace NH;
 
-use MyApp\LoveLetter\LoveLetter;
+use NH\LoveLetter\LoveLetter;
 use Ratchet\ConnectionInterface;
 
 class Player

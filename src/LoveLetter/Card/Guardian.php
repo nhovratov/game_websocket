@@ -1,8 +1,8 @@
 <?php
 
-namespace MyApp\LoveLetter\Card;
+namespace NH\LoveLetter\Card;
 
-use MyApp\LoveLetter\LoveLetter;
+use NH\LoveLetter\LoveLetter;
 
 /**
  * Errätst du die Handkarte eines Mitspielers, scheidet dieser aus ... Gilt nicht für "Wächterin"!

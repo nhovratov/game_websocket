@@ -6,12 +6,12 @@
  * Time: 13:48
  */
 
-namespace MyApp\LoveLetter;
+namespace NH\LoveLetter;
 
 
-use MyApp\LoveLetter\Card\Countess;
-use MyApp\LoveLetter\Card\King;
-use MyApp\LoveLetter\Card\Prince;
+use NH\LoveLetter\Card\Countess;
+use NH\LoveLetter\Card\King;
+use NH\LoveLetter\Card\Prince;
 
 class Validator
 {

@@ -6,7 +6,7 @@
  * Time: 17:06
  */
 
-namespace MyApp;
+namespace NH;
 
 
 interface StateInterface

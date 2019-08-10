@@ -1,6 +1,6 @@
 <?php
 
-namespace MyApp\LoveLetter\Card;
+namespace NH\LoveLetter\Card;
 
 abstract class AbstractCard
 {

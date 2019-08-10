@@ -6,12 +6,12 @@
  * Time: 23:44
  */
 
-use MyApp\LoveLetter\Card\Baron;
-use MyApp\LoveLetter\Card\Guardian;
-use MyApp\LoveLetter\Card\Priest;
-use MyApp\LoveLetter\LoveLetter;
-use MyApp\Mock\MockStackProvider;
-use MyApp\Player;
+use NH\LoveLetter\Card\Baron;
+use NH\LoveLetter\Card\Guardian;
+use NH\LoveLetter\Card\Priest;
+use NH\LoveLetter\LoveLetter;
+use NH\Mock\MockStackProvider;
+use NH\Player;
 use PHPUnit\Framework\TestCase;
 use Ratchet\Mock\Connection;
 

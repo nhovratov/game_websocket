@@ -1,6 +1,6 @@
 <?php
 
-use MyApp\Game;
+use NH\Game;
 use Ratchet\Http\HttpServer;
 use Ratchet\Server\IoServer;
 use Ratchet\WebSocket\WsServer;

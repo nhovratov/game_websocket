@@ -8,4 +8,4 @@ if (!file_exists(dirname(__DIR__) . '/composer.lock')) {
 // Include the composer autoloader
 $autoloader = require dirname(__DIR__) . '/vendor/autoload.php';
 $autoloader->addPsr4('Ratchet\\', dirname(__DIR__) . '/vendor/cboden/ratchet/tests/helpers/Ratchet');
-$autoloader->addPsr4('MyApp\\', dirname(__DIR__) . '/tests/Unit/LoveLetter');
+$autoloader->addPsr4('NH\\', dirname(__DIR__) . '/tests/Unit/LoveLetter');
