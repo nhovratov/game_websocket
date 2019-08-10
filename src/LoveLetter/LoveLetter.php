@@ -545,7 +545,7 @@ class LoveLetter implements GameInterface
                 $this->players->rewind();
             }
             $player = $this->players->current();
-            if ($player->getId() == $this->activePlayer->getId()) {
+            if ($player->getId() === $this->activePlayer->getId()) {
                 $this->players->next();
                 // Now find the next player who is not out of the game
                 while (true) {
