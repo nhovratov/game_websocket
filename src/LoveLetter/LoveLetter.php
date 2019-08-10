@@ -246,7 +246,6 @@ class LoveLetter implements GameInterface
             }
             $player->getClient()->send(json_encode($msg));
         }
-        $this->players->rewind();
     }
 
     public function getGlobalState()
@@ -347,7 +346,6 @@ class LoveLetter implements GameInterface
                 $player->getGameState()->reset();
             }
         }
-        $this->players->rewind();
     }
 
     protected function nextTurn()
@@ -484,7 +482,6 @@ class LoveLetter implements GameInterface
                     $highestValue = $currentValue;
                 }
             }
-            $this->players->rewind();
             foreach ($this->players as $player) {
                 /** @var PlayerState $state */
                 $state = $player->getGameState();
@@ -560,7 +557,6 @@ class LoveLetter implements GameInterface
                     } else {
                         /** @var Player $nextPlayer */
                         $nextPlayer = $this->players->current();
-                        $this->players->rewind();
                         return $nextPlayer;
                     }
                 }
@@ -601,7 +597,6 @@ class LoveLetter implements GameInterface
                 return $player;
             }
         }
-        $this->players->rewind();
         return false;
     }
 
