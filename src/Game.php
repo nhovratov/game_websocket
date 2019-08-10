@@ -17,8 +17,6 @@ class Game implements MessageComponentInterface
 {
     protected $players;
 
-    protected $clients;
-
     protected $globalState = [];
 
     protected $game;
@@ -26,7 +24,6 @@ class Game implements MessageComponentInterface
     public function __construct()
     {
         $this->players = new \SplObjectStorage();
-        $this->clients = new \SplObjectStorage();
         $this->game = new LoveLetter();
         $this->globalState['status'] = 'Willkommen!';
     }
@@ -38,19 +35,7 @@ class Game implements MessageComponentInterface
      */
     function onOpen(ConnectionInterface $conn)
     {
-        echo $conn->resourceId;
-        /** @var Session $session */
-        $session = $conn->Session;
-        $session->start();
-        $sessionId = md5(time());
-        $session->set('id', $sessionId);
-        $this->clients->attach($conn);
-        $conn->send(json_encode([
-            'global' => $this->globalState,
-            'local' => [
-                'id' => $sessionId
-            ]
-        ]));
+        // noop
     }
 
     /**
@@ -60,10 +45,9 @@ class Game implements MessageComponentInterface
      */
     function onClose(ConnectionInterface $conn)
     {
-        // The connection is closed, remove it, as we can no longer send it messages
-        $this->clients->detach($conn);
+        /** @var Player $player */
         foreach ($this->players as $player) {
-            if ($player->getClient() == $conn) {
+            if ($player->getClient() === $conn) {
                 $player->removeClient();
                 break;
             }
@@ -94,21 +78,24 @@ class Game implements MessageComponentInterface
     {
         $msg = json_decode($msg, true);
         if (isset($msg['id'])) {
-            if (!$this->playerExists($msg['id'])) {
-                $player = new Player($from);
-                $this->players->attach($player);
+            $player = $this->getPlayerById($msg['id']);
+            if (!$player) {
+                $player = $this->createNewPlayer($from);
                 if ($this->players->count() === 1) {
                     $player->setIsHost(true);
                     $this->globalState['hostid'] = $player->getId();
                 }
-            } elseif (!$this->getPlayerById($msg['id'])->getClient()) {
-                $player = $this->getPlayerById($msg['id']);
-                $player->setClient($from);
+            } else {
+                if (!$player->getClient()) {
+                    $player = $this->getPlayerById($msg['id']);
+                    $player->setClient($from);
+                }
+                if (isset($msg['name'])) {
+                    $player->setName($msg['name']);
+                }
             }
-            if (isset($msg['name'])) {
-                $player = $this->getPlayerById($msg['id']);
-                $player->setName($msg['name']);
-            }
+        } else {
+            $this->createNewPlayer($from);
         }
 
         if (isset($msg['action'])) {
@@ -150,18 +137,24 @@ class Game implements MessageComponentInterface
         $this->game->updateState();
     }
 
-    /**
-     * @param $id
-     * @return bool
-     */
-    protected function playerExists($id): bool
+    protected function createNewPlayer($from)
     {
-        foreach ($this->players as $player) {
-            if ($player->getId() === $id) {
-                return true;
-            }
-        }
-        return false;
+        /** @var Session $session */
+        $session = $from->Session;
+        $session->start();
+        $sessionId = md5(time());
+        $session->set('id', $sessionId);
+        $uid = $this->getUniqueId();
+        $player = new Player($from, $uid);
+        $this->players->attach($player);
+        $from->send(json_encode([
+            'global' => $this->globalState,
+            'local' => [
+                'newId' => $sessionId,
+                'id' => $uid
+            ]
+        ]));
+        return $player;
     }
 
     /**
@@ -170,8 +163,9 @@ class Game implements MessageComponentInterface
      */
     protected function getPlayerById($id): ?Player
     {
+        /** @var Player $player */
         foreach ($this->players as $player) {
-            if ($player->getId() === $id) {
+            if ($player->isUserIdentifier($id)) {
                 return $player;
             }
         }
@@ -192,5 +186,12 @@ class Game implements MessageComponentInterface
             ];
         }
         return $players;
+    }
+
+    protected function getUniqueId()
+    {
+        static $count = 0;
+        $count += 1;
+        return $count;
     }
 }

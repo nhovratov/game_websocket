@@ -21,9 +21,14 @@ class Player
     protected $client;
 
     /**
-     * @var int
+     * @var Session
      */
-    protected $id = 0;
+    protected $session;
+
+    /**
+     * @var string
+     */
+    protected $id = '';
 
     /**
      * @var StateInterface
@@ -40,9 +45,11 @@ class Player
      */
     protected $isHost = false;
 
-    public function __construct($client)
+    public function __construct($client, $id)
     {
         $this->client = $client;
+        $this->session = $client->Session;
+        $this->id = $id;
     }
 
     public function getState($players)
@@ -76,7 +83,16 @@ class Player
      */
     public function getId()
     {
-        return $this->getSession()->get('id');
+        return $this->id;
+    }
+
+    /**
+     * @param $id
+     * @return bool
+     */
+    public function isUserIdentifier($id): bool
+    {
+        return $this->session->get('id') === $id;
     }
 
     /**
@@ -130,13 +146,5 @@ class Player
     public function setIsHost(bool $isHost)
     {
         $this->isHost = $isHost;
-    }
-
-    /**
-     * @return Session
-     */
-    protected function getSession()
-    {
-        return $this->client->Session;
     }
 }
