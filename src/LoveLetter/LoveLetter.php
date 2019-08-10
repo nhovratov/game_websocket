@@ -292,6 +292,7 @@ class LoveLetter implements GameInterface
     }
 
     /**
+     * TODO Maybe move this to some other class 'Rules'
      * @param \SplObjectStorage $players
      * @return bool
      */
