@@ -163,7 +163,7 @@ class LoveLetter implements GameInterface
     public function start($players)
     {
         // Game needs at least 2 players
-        if (count($players) < 2) {
+        if (!self::isGameReady($players)) {
             return;
         }
         $this->players = $players;
