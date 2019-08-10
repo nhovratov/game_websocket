@@ -11,7 +11,6 @@ namespace MyApp;
 use MyApp\LoveLetter\LoveLetter;
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
-use Symfony\Component\HttpFoundation\Session\Session;
 
 class Game implements MessageComponentInterface
 {
@@ -20,6 +19,8 @@ class Game implements MessageComponentInterface
     protected $globalState = [];
 
     protected $game;
+
+    protected $secret = 'f$iz98HdidHDL?!:';
 
     public function __construct()
     {
@@ -36,6 +37,7 @@ class Game implements MessageComponentInterface
     function onOpen(ConnectionInterface $conn)
     {
         // noop
+        echo "ONOPEN\n";
     }
 
     /**
@@ -45,13 +47,8 @@ class Game implements MessageComponentInterface
      */
     function onClose(ConnectionInterface $conn)
     {
-        /** @var Player $player */
-        foreach ($this->players as $player) {
-            if ($player->getClient() === $conn) {
-                $player->removeClient();
-                break;
-            }
-        }
+        echo "ONCLOSE\n";
+        $this->removeClient($conn);
         $this->update();
     }
 
@@ -76,35 +73,56 @@ class Game implements MessageComponentInterface
      */
     function onMessage(ConnectionInterface $from, $msg)
     {
+        echo "START ONMESSAGE\n";
         $msg = json_decode($msg, true);
-        if (isset($msg['id'])) {
+
+        // User have to identify himself
+        if (!isset($msg['id'])) {
+            $this->removeClient($from);
+            $this->update();
+            return;
+        }
+
+        // Client wants to identify
+        if ($msg['id'] !== '') {
+            echo "Id {$msg['id']} provided.\n";
             $player = $this->getPlayerById($msg['id']);
+            // if id provided is invalid, create a new player
             if (!$player) {
+                echo "Id {$msg['id']} does not exist. Create new player.\n";
                 $player = $this->createNewPlayer($from);
-                if ($this->players->count() === 1) {
-                    $player->setIsHost(true);
-                    $this->globalState['hostid'] = $player->getId();
-                }
+            // if player already exists, get him a new connection if needed
+            } elseif (!$player->getClient()) {
+                echo "Id exists but no client is set. Set new client.\n";
+                $player = $this->getPlayerById($msg['id']);
+                $player->setClient($from);
             } else {
-                if (!$player->getClient()) {
-                    $player = $this->getPlayerById($msg['id']);
-                    $player->setClient($from);
-                }
-                if (isset($msg['name'])) {
-                    $player->setName($msg['name']);
-                }
+                // Everything is fine
+                echo "Id {$msg['id']} identified successfully.\n";
             }
+            // If player wants to connect without id, create new player
         } else {
-            $this->createNewPlayer($from);
+            echo "New connection established. Create player.\n";
+            $player = $this->createNewPlayer($from);
+        }
+
+        if (isset($msg['name']) && $msg['name'] !== '') {
+            echo "Name {$msg['name']} provided. Set name.\n";
+            $player->setName($msg['name']);
         }
 
         if (isset($msg['action'])) {
             $params = [];
-            if (key_exists('params', $msg)) {
+            if (isset($msg['params'])) {
                 $params = $msg['params'];
             }
+            $params['uid'] = $msg['id'];
             switch ($msg['action']) {
+                // This action requires host rights
                 case 'start':
+                    if (!$player->isHost()) {
+                        break;
+                    }
                     $players = clone $this->players;
                     foreach ($players as $p) {
                         if (!$p->getClient()) {
@@ -113,13 +131,13 @@ class Game implements MessageComponentInterface
                     }
                     $players->rewind();
                     $this->game->start($players);
-                    return;
+                    break;
                 default:
                     $this->game->handleAction($params);
-                    return;
             }
         }
         $this->update();
+        echo "END ONMESSAGE";
     }
 
     protected function update()
@@ -129,6 +147,7 @@ class Game implements MessageComponentInterface
             if (!$player->getClient()) {
                 continue;
             }
+            echo "Send current state to {$player->getId()}\n";
             $player->getClient()->send(json_encode([
                 'global' => $this->globalState,
                 'local' => $player->getState($this->players)
@@ -139,22 +158,37 @@ class Game implements MessageComponentInterface
 
     protected function createNewPlayer($from)
     {
-        /** @var Session $session */
-        $session = $from->Session;
-        $session->start();
-        $sessionId = md5(time());
-        $session->set('id', $sessionId);
-        $uid = $this->getUniqueId();
-        $player = new Player($from, $uid);
+        $id = $this->getUniqueId();
+        $sessionId = md5(time() . $this->secret . $id);
+        $player = new Player($from, $id, $sessionId);
         $this->players->attach($player);
+        echo "SEND: New id " . $sessionId . " and id " . $id . "\n";
+        if ($this->players->count() === 1) {
+            echo "Player is new host\n";
+            $player->setIsHost(true);
+            $this->globalState['hostid'] = $player->getId();
+        }
         $from->send(json_encode([
             'global' => $this->globalState,
             'local' => [
                 'newId' => $sessionId,
-                'id' => $uid
+                'id' => $id
             ]
         ]));
         return $player;
+    }
+
+    protected function removeClient($conn)
+    {
+        /** @var Player $player */
+        foreach ($this->players as $player) {
+            if ($player->getClient() === $conn) {
+                $conn->close();
+                $player->removeClient();
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

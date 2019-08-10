@@ -22,7 +22,7 @@ class StackProvider
         $this->insertCards($stack, Baron::getCard(), LoveLetter::BARONCOUNT);
         $this->insertCards($stack, Maid::getCard(), LoveLetter::MAIDCOUNT);
         $this->insertCards($stack, Prince::getCard(), LoveLetter::PRINCECOUNT);
-        $this->insertCards($stack, King::getCard(), LoveLetter::COUNTESSCOUNT);
+        $this->insertCards($stack, King::getCard(), LoveLetter::KINGCOUNT);
         $this->insertCards($stack, Countess::getCard(), LoveLetter::COUNTESSCOUNT);
         $this->insertCards($stack, Prince::getCard(), LoveLetter::PRINCESSCOUNT);
         shuffle($stack);

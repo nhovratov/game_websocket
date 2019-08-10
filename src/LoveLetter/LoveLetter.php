@@ -157,15 +157,15 @@ class LoveLetter implements GameInterface
      */
     public function __construct($stackProvider = null)
     {
-        if ($stackProvider !== null) {
-            $this->stackProvider = $stackProvider;
-        } else {
-            $this->stackProvider = new StackProvider();
-        }
+        $this->stackProvider = $stackProvider ?? new StackProvider();
     }
 
     public function start($players)
     {
+        // Game needs at least 2 players
+        if (count($players) < 2) {
+            return;
+        }
         $this->players = $players;
         $this->resetGame();
         $this->stack = $this->stackProvider->getStack();
@@ -182,6 +182,7 @@ class LoveLetter implements GameInterface
                 $this->outOfGameCards[] = $this->drawCard();
             }
         }
+        $this->activePlayer = $this->getHost();
         $this->status = 'Host wählt ersten Spieler...';
         $this->waitFor = self::SELECT_FIRST_PLAYER;
         $this->updateState();
@@ -189,13 +190,18 @@ class LoveLetter implements GameInterface
 
     public function handleAction($params = [])
     {
-        // TODO Must receive player as argument, because active player is not always set. Ideally players have session keys.
-        if ($this->activePlayer) {
-            $action = $this->getAllowedActionByPlayer($this->activePlayer);
-        } else {
-            $action = $this->waitFor;
+        // No actions allowed yet
+        if (!$this->waitFor) {
+            return;
         }
-        switch ($action) {
+
+        // Some player tried to hijack the current players turn.
+        if (!$this->activePlayer->isUserIdentifier($params['uid'])) {
+            echo "Player {$params['uid']} tried to hijack this turn. This will be reported.\n";
+            return;
+        }
+
+        switch ($this->getAllowedActionByPlayer($this->activePlayer)) {
             case self::CHOOSE_PLAYER:
             case self::CHOOSE_GUARDIAN_EFFECT_CARD:
             case self::FINISH_LOOKING_AT_CARD:
@@ -717,5 +723,19 @@ class LoveLetter implements GameInterface
     public function setGuardianEffectName(string $name)
     {
         $this->guardianEffect['name'] = $name;
+    }
+
+    /**
+     * @return Player
+     */
+    public function getHost(): ?Player
+    {
+        /** @var Player $player */
+        foreach ($this->players as $player) {
+            if ($player->isHost()) {
+                return $player;
+            }
+        }
+        return null;
     }
 }

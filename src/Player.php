@@ -8,48 +8,46 @@
 
 namespace MyApp;
 
-
 use MyApp\LoveLetter\LoveLetter;
 use Ratchet\ConnectionInterface;
-use Symfony\Component\HttpFoundation\Session\Session;
 
 class Player
 {
     /**
      * @var ConnectionInterface
      */
-    protected $client;
+    private $client;
 
     /**
-     * @var Session
+     * @var int
      */
-    protected $session;
+    private $id = 0;
 
     /**
      * @var string
      */
-    protected $id = '';
+    private $uid = '';
 
     /**
      * @var StateInterface
      */
-    protected $gameState = null;
+    private $gameState = null;
 
     /**
      * @var string
      */
-    protected $name = '';
+    private $name = '';
 
     /**
      * @var bool
      */
-    protected $isHost = false;
+    private $isHost = false;
 
-    public function __construct($client, $id)
+    public function __construct($client, $id, $uid)
     {
         $this->client = $client;
-        $this->session = $client->Session;
         $this->id = $id;
+        $this->uid = $uid;
     }
 
     public function getState($players)
@@ -87,12 +85,12 @@ class Player
     }
 
     /**
-     * @param $id
+     * @param $value string
      * @return bool
      */
-    public function isUserIdentifier($id): bool
+    public function isUserIdentifier($value): bool
     {
-        return $this->session->get('id') === $id;
+        return $this->uid === $value;
     }
 
     /**
