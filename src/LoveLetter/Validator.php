@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: NIKITA
- * Date: 21.04.2019
- * Time: 13:48
- */
 
 namespace NH\LoveLetter;
-
 
 use NH\LoveLetter\Card\Countess;
 use NH\LoveLetter\Card\King;
