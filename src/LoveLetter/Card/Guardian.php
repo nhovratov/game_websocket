@@ -25,8 +25,14 @@ class Guardian extends AbstractCard implements EffectInterface
 
         // Player has selected other player. Now let him guess a card.
         if ($game->getWaitFor() === LOVELETTER::CHOOSE_PLAYER) {
+            if (!key_exists('id', $params)) {
+                return;
+            }
             $id = (int)$params['id'];
             $chosenPlayer = $game->getPlayerById($id);
+            if (!$chosenPlayer) {
+                return;
+            }
             $game->setGuardianEffectId($id);
             $game->setGuardianEffectName($chosenPlayer->getName());
             $game->setWaitFor(LOVELETTER::CHOOSE_GUARDIAN_EFFECT_CARD);
@@ -35,7 +41,11 @@ class Guardian extends AbstractCard implements EffectInterface
 
         // Check if player was right, then the other player is out.
         $chosenPlayer = $game->getPlayerById($game->getGuardianEffect()['id']);
+        if (!key_exists('card', $params)) {
+            return;
+        }
         $card = $params['card'];
+        // TODO Check if card is valid
         $chosenPlayerState = $chosenPlayer->getGameState();
         $chosenPlayerCard = array_slice($chosenPlayerState->getCards(), 0, 1)[0];
         if ($card === $chosenPlayerCard['name']) {
