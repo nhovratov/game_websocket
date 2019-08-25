@@ -393,7 +393,15 @@ class LoveLetter implements GameInterface
 
     protected function setupFirstTurnAction($params)
     {
-        $this->activePlayer = $this->getPlayerById($params['id']);
+        if (!key_exists('id', $params)) {
+            return;
+        }
+        $id = (int)$params['id'];
+        $player = $this->getPlayerById($id);
+        if (!$player) {
+            return;
+        }
+        $this->activePlayer = $player;
         $this->drawCardForActivePlayer();
         $this->waitFor = self::CHOOSE_CARD;
         $this->status = "{$this->activePlayer->getName()} ist dran ...";
