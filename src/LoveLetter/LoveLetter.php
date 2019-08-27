@@ -128,11 +128,6 @@ class LoveLetter implements GameInterface
     /**
      * @var array
      */
-    protected $discardPile = [];
-
-    /**
-     * @var array
-     */
     protected $protectedPlayers = [];
 
     /**
@@ -250,11 +245,6 @@ class LoveLetter implements GameInterface
 
     public function getGlobalState()
     {
-        $visibleDiscardedCard = [];
-        $numDicardedCards = count($this->discardPile);
-        if ($numDicardedCards > 0) {
-            $visibleDiscardedCard = [$this->discardPile[$numDicardedCards - 1]];
-        }
         $playerTurn = $this->activePlayer ? $this->getActivePlayerId() : '';
         return [
             'gameStarted' => $this->gameStarted,
@@ -264,7 +254,6 @@ class LoveLetter implements GameInterface
             'status' => $this->status,
             'activeCard' => $this->activeCard,
             'outOfGameCards' => $this->outOfGameCards,
-            'discardPile' => $visibleDiscardedCard,
             'protectedPlayers' => $this->protectedPlayers,
             'outOfGamePlayers' => $this->outOfGamePlayers,
             'winners' => $this->winners,
@@ -284,11 +273,6 @@ class LoveLetter implements GameInterface
             }
         }
         return $card;
-    }
-
-    public function discardCard(&$cards)
-    {
-        return $this->transferCard($cards, $this->discardPile);
     }
 
     /**
@@ -333,7 +317,6 @@ class LoveLetter implements GameInterface
         $this->stackProvider->setCounter(1);
         $this->stack = [];
         $this->reserve = [];
-        $this->discardPile = [];
         $this->protectedPlayers = [];
         $this->outOfGameCards = [];
         $this->activeCard = null;
@@ -355,9 +338,7 @@ class LoveLetter implements GameInterface
         if (in_array($this->activePlayer->getId(), $this->protectedPlayers)) {
             /** @var PlayerState $gameState */
             $gameState = $this->activePlayer->getGameState();
-            $openEffectCards = $gameState->getOpenEffectCards();
-            $this->transferCard($openEffectCards, $this->discardPile);
-            $gameState->setOpenEffectCards($openEffectCards);
+            $gameState->discardOpenEffectCard();
             $key = array_search($this->activePlayer->getId(), $this->protectedPlayers);
             array_splice($this->protectedPlayers, $key, 1);
         }
@@ -371,17 +352,6 @@ class LoveLetter implements GameInterface
         /** @var PlayerState $gameState */
         $gameState = $this->activePlayer->getGameState();
         $gameState->addCard($this->drawCard());
-    }
-
-    protected function transferCard(&$from, &$to, $index = 0)
-    {
-        if (is_null($to) || is_string(key($to))) {
-            $to = array_splice($from, $index, 1)[0];
-            return $to;
-        } else {
-            $to[] = array_splice($from, $index, 1)[0];
-            return $to[count($to) - 1];
-        }
     }
 
     protected function finishGame()
@@ -435,7 +405,7 @@ class LoveLetter implements GameInterface
 
     protected function discardActiveCardAction()
     {
-        $this->discardPile[] = $this->activeCard;
+        $this->activePlayer->getGameState()->addToDicardPile($this->activeCard);
         $this->activeCard = null;
         $this->nextTurn();
     }
@@ -577,17 +547,16 @@ class LoveLetter implements GameInterface
 
     /**
      * Used for brief overview of ingame players
-     * // TODO Extend with more states like proteced, outOfGame...
      * @return mixed
      */
     public function getPlayerInfo()
     {
         $players = [];
-        $clonedPlayers = clone $this->players;
-        foreach ($clonedPlayers as $player) {
+        foreach ($this->players as $player) {
             $players[] = [
-                "id" => $player->getId(),
-                "name" => $player->getName(),
+                'id' => $player->getId(),
+                'name' => $player->getName(),
+                'discardPile' => $player->getGameState()->getDiscardPile()
             ];
         }
         return $players;

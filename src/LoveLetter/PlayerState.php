@@ -33,6 +33,11 @@ class PlayerState implements StateInterface
      */
     protected $allowedAction = '';
 
+    /**
+     * @var array
+     */
+    protected $discardPile = [];
+
     public function getState()
     {
         return [
@@ -48,6 +53,7 @@ class PlayerState implements StateInterface
         $this->cards = [];
         $this->openEffectCards = [];
         $this->allowedAction = '';
+        $this->discardPile = [];
     }
 
     /**
@@ -127,4 +133,34 @@ class PlayerState implements StateInterface
         $this->allowedAction = $allowedAction;
     }
 
+    /**
+     * @return array
+     */
+    public function getDiscardPile(): array
+    {
+        return $this->discardPile;
+    }
+
+    /**
+     * @param array $card
+     */
+    public function addToDicardPile($card)
+    {
+        $this->discardPile[] = $card;
+    }
+
+    protected function discardCard(&$cards)
+    {
+        $this->addToDicardPile(array_splice($cards, 0, 1)[0]);
+    }
+
+    public function discardHandCard()
+    {
+        $this->discardCard($this->cards);
+    }
+
+    public function discardOpenEffectCard()
+    {
+        $this->discardCard($this->openEffectCards);
+    }
 }

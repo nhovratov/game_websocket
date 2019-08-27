@@ -452,7 +452,7 @@ class LoveLetterTest extends TestCase
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
 
-        // John chooses price card
+        // John chooses prince card
         $game->handleAction(['uid' => '123', 'key' => 12]);
 
         // John chooses Mikel to discard his card

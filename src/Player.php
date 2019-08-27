@@ -9,6 +9,7 @@
 namespace NH;
 
 use NH\LoveLetter\LoveLetter;
+use NH\LoveLetter\PlayerState;
 use Ratchet\ConnectionInterface;
 
 class Player
@@ -29,7 +30,7 @@ class Player
     private $uid = '';
 
     /**
-     * @var StateInterface
+     * @var PlayerState
      */
     private $gameState = null;
 
@@ -50,6 +51,11 @@ class Player
         $this->uid = $uid;
     }
 
+    /**
+     * Local game state
+     * @param $players
+     * @return array
+     */
     public function getState($players)
     {
         return [
@@ -61,15 +67,15 @@ class Player
     }
 
     /**
-     * @param StateInterface $gameState
+     * @param PlayerState $gameState
      */
-    public function setGameState(StateInterface $gameState)
+    public function setGameState(PlayerState $gameState)
     {
         $this->gameState = $gameState;
     }
 
     /**
-     * @return StateInterface
+     * @return PlayerState
      */
     public function getGameState()
     {

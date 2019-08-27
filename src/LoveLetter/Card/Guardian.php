@@ -50,9 +50,7 @@ class Guardian extends AbstractCard implements EffectInterface
         $chosenPlayerCard = array_slice($chosenPlayerState->getCards(), 0, 1)[0];
         if ($card === $chosenPlayerCard['name']) {
             $game->addOutOfGamePlayer($chosenPlayer->getId());
-            $cards = $chosenPlayerState->getCards();
-            $game->discardCard($cards);
-            $chosenPlayerState->setCards($cards);
+            $chosenPlayerState->discardHandCard();
             $game->setStatus($card . '! Richtig geraten! ' . $chosenPlayer->getName() . ' scheidet aus! ');
         } else {
             $game->setStatus($card . '! Falsch geraten! ');
