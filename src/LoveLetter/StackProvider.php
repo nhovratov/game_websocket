@@ -26,6 +26,7 @@ class StackProvider
         $this->insertCards($stack, Countess::getCard(), LoveLetter::COUNTESSCOUNT);
         $this->insertCards($stack, Prince::getCard(), LoveLetter::PRINCESSCOUNT);
         shuffle($stack);
+        $this->counter = 1;
         return $stack;
     }
 
@@ -36,21 +37,5 @@ class StackProvider
             $stack[] = $card;
             $this->counter += 1;
         }
-    }
-
-    /**
-     * @return int
-     */
-    public function getCounter(): int
-    {
-        return $this->counter;
-    }
-
-    /**
-     * @param int $counter
-     */
-    public function setCounter(int $counter)
-    {
-        $this->counter = $counter;
     }
 }

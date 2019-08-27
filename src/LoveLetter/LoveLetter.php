@@ -155,16 +155,31 @@ class LoveLetter implements GameInterface
         $this->stackProvider = $stackProvider ?? new StackProvider();
     }
 
+    /**
+     * @param \SplObjectStorage $players
+     */
     public function start($players)
     {
         $this->players = $players;
         if (!$this->isGameReady()) {
             return;
         }
-        $this->resetGame();
+
+        // Reset state
+        $this->stack = [];
+        $this->reserve = [];
+        $this->protectedPlayers = [];
+        $this->outOfGameCards = [];
+        $this->activeCard = null;
+        $this->resetGuardianEffect();
+        $this->winners = [];
+        $this->outOfGamePlayers = [];
+        $this->gameFinished = false;
+        $this->activePlayer = null;
         $this->stack = $this->stackProvider->getStack();
         $this->gameStarted = true;
-        /** @var Player $player */
+
+        // Draw cards
         foreach ($this->players as $player) {
             $gameState = new PlayerState();
             $gameState->addCard($this->drawCard());
@@ -176,6 +191,7 @@ class LoveLetter implements GameInterface
                 $this->outOfGameCards[] = $this->drawCard();
             }
         }
+
         $this->activePlayer = $this->getHost();
         $this->status = 'Host wählt ersten Spieler...';
         $this->waitFor = self::SELECT_FIRST_PLAYER;
@@ -306,26 +322,6 @@ class LoveLetter implements GameInterface
 
             default:
                 return $this->isPlayerTurn($player) ? $this->waitFor : '';
-        }
-    }
-
-    protected function resetGame()
-    {
-        $this->stackProvider->setCounter(1);
-        $this->stack = [];
-        $this->reserve = [];
-        $this->protectedPlayers = [];
-        $this->outOfGameCards = [];
-        $this->activeCard = null;
-        $this->resetGuardianEffect();
-        $this->winners = [];
-        $this->outOfGamePlayers = [];
-        $this->gameFinished = false;
-        $this->activePlayer = null;
-        foreach ($this->players as $player) {
-            if ($player->getGameState()) {
-                $player->getGameState()->reset();
-            }
         }
     }
 
