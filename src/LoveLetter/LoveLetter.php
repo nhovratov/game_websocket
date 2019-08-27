@@ -184,6 +184,9 @@ class LoveLetter implements GameInterface
             $gameState = new PlayerState();
             $gameState->addCard($this->drawCard());
             $player->setGameState($gameState);
+            if ($player->isHost()) {
+                $this->activePlayer = $player;
+            }
         }
         $this->reserve[] = $this->drawCard();
         if ($this->players->count() === 2) {
@@ -192,7 +195,6 @@ class LoveLetter implements GameInterface
             }
         }
 
-        $this->activePlayer = $this->getHost();
         $this->status = 'Host wählt ersten Spieler...';
         $this->waitFor = self::SELECT_FIRST_PLAYER;
         $this->updateState();
@@ -684,19 +686,5 @@ class LoveLetter implements GameInterface
     public function setGuardianEffectName(string $name)
     {
         $this->guardianEffect['name'] = $name;
-    }
-
-    /**
-     * @return Player
-     */
-    public function getHost(): ?Player
-    {
-        /** @var Player $player */
-        foreach ($this->players as $player) {
-            if ($player->isHost()) {
-                return $player;
-            }
-        }
-        return null;
     }
 }
