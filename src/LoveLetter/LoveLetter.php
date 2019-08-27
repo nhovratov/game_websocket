@@ -351,13 +351,6 @@ class LoveLetter implements GameInterface
         $gameState->addCard($this->drawCard());
     }
 
-    protected function finishGame()
-    {
-        $this->gameFinished = true;
-        $this->gameStarted = false;
-        $this->waitFor = self::START_NEW_GAME;
-    }
-
     protected function setupFirstTurnAction($params)
     {
         if (!key_exists('id', $params)) {
@@ -421,7 +414,11 @@ class LoveLetter implements GameInterface
         $cardClass = self::CARDS[$this->activeCard['id']];
         $cardClass::activate($this, $params);
         // After each end of effect, we check if the game is finished by now
-        $this->isGameFinished();
+        if ($this->isGameFinished()) {
+            $this->gameFinished = true;
+            $this->gameStarted = false;
+            $this->waitFor = self::START_NEW_GAME;
+        }
     }
 
     protected function isGameFinished()
@@ -437,7 +434,6 @@ class LoveLetter implements GameInterface
 
         // If there is only one player left, he has won.
         if (count($this->outOfGamePlayers) === $this->players->count() - 1) {
-            $this->finishGame();
             $victoriousPlayer = $this->getNextPlayer();
             $this->winners[] = $victoriousPlayer->getId();
             $this->status = $victoriousPlayer->getName() . " hat gewonnen!";
@@ -446,7 +442,6 @@ class LoveLetter implements GameInterface
 
         // If there are no cards left at the end of someones turn, players with the highest card win.
         if (count($this->stack) === 0) {
-            $this->finishGame();
             $highestValue = 0;
             /** @var Player $player */
             foreach ($this->players as $player) {
