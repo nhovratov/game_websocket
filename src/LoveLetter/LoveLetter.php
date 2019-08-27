@@ -279,17 +279,13 @@ class LoveLetter implements GameInterface
         ];
     }
 
-    public function drawCard($useReserve = false)
+    public function drawCard()
     {
-        $card = array_pop($this->stack);
-        if (is_null($card)) {
-            if ($useReserve) {
-                return array_pop($this->reserve);
-            } else {
-                return false;
-            }
+        if (count($this->stack) > 0) {
+            return array_pop($this->stack);
+        } else {
+            return array_pop($this->reserve);
         }
-        return $card;
     }
 
     /**

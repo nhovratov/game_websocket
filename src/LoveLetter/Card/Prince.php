@@ -32,7 +32,7 @@ class Prince extends AbstractCard implements EffectInterface
             $game->addOutOfGamePlayer($chosenPlayer->getId());
             $game->setStatus($game->getStatus() . 'und ist deshalb ausgeschieden. ');
         } else {
-            $gameState->addCard($game->drawCard(true));
+            $gameState->addCard($game->drawCard());
             $game->setStatus($game->getStatus() . 'und eine neue Karte wurde gezogen. ');
         }
         $game->setWaitFor(LOVELETTER::CONFIRM_DISCARD_CARD);
