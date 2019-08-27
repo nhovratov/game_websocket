@@ -16,7 +16,7 @@ class Maid extends AbstractCard implements EffectInterface
 
     public static function activate(LoveLetter $game, $params = [])
     {
-        $game->addProtectedPlayer($game->getActivePlayerId());
+        $game->addProtectedPlayer();
         $game->setWaitFor(LoveLetter::PLACE_MAID_CARD);
         $game->setStatus($game->getActivePlayerName() . ' ist für eine Runde geschützt und muss seine Karte vor sich offen hinlegen ...');
     }

@@ -609,12 +609,9 @@ class LoveLetter implements GameInterface
         $this->outOfGamePlayers[] = $id;
     }
 
-    /**
-     * @param int $id
-     */
-    public function addProtectedPlayer(int $id)
+    public function addProtectedPlayer()
     {
-        $this->protectedPlayers[] = $id;
+        $this->protectedPlayers[] = $this->getActivePlayerId();
     }
 
     /**
