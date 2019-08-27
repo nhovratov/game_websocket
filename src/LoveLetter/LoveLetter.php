@@ -157,11 +157,10 @@ class LoveLetter implements GameInterface
 
     public function start($players)
     {
-        // Game needs at least 2 players
-        if (!self::isGameReady($players)) {
+        $this->players = $players;
+        if (!$this->isGameReady()) {
             return;
         }
-        $this->players = $players;
         $this->resetGame();
         $this->stack = $this->stackProvider->getStack();
         $this->gameStarted = true;
@@ -276,13 +275,11 @@ class LoveLetter implements GameInterface
     }
 
     /**
-     * TODO Maybe move this to some other class 'Rules'
-     * @param \SplObjectStorage $players
      * @return bool
      */
-    public static function isGameReady(\SplObjectStorage $players)
+    protected function isGameReady()
     {
-        return $players->count() >= 2;
+        return count($this->players) >= 2;
     }
 
     /**

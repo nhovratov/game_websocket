@@ -53,16 +53,14 @@ class Player
 
     /**
      * Local game state
-     * @param $players
      * @return array
      */
-    public function getState($players)
+    public function getState()
     {
         return [
             "id" => $this->id,
             "name" => $this->name,
-            "isHost" => $this->isHost,
-            "canStartGame" => $this->isHost && LoveLetter::isGameReady($players)
+            "isHost" => $this->isHost
         ];
     }
 
