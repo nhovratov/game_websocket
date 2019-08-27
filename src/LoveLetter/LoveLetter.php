@@ -160,12 +160,12 @@ class LoveLetter implements GameInterface
      */
     public function start($players)
     {
-        $this->players = $players;
-        if (!$this->isGameReady()) {
+        if (count($players) < 2) {
             return;
         }
 
         // Reset state
+        $this->players = $players;
         $this->stack = [];
         $this->reserve = [];
         $this->protectedPlayers = [];
@@ -290,14 +290,6 @@ class LoveLetter implements GameInterface
             }
         }
         return $card;
-    }
-
-    /**
-     * @return bool
-     */
-    protected function isGameReady()
-    {
-        return count($this->players) >= 2;
     }
 
     /**
