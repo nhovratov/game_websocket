@@ -43,7 +43,7 @@ class LoveLetterTest extends TestCase
         $players->attach($player1);
         $players->attach($player2);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
         $state = $this->getGameState($player1);
 
         $this->assertCount(2, $state['players']);
@@ -82,7 +82,7 @@ class LoveLetterTest extends TestCase
         $players->attach(new Player(new Connection(), 2, '234'));
         $players->attach(new Player(new Connection(), 3, '345'));
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
         $state = $this->getGameState($player1);
 
         $this->assertCount(3, $state['players']);
@@ -107,7 +107,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
@@ -138,7 +138,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
@@ -183,7 +183,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
@@ -228,7 +228,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
@@ -273,7 +273,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
@@ -327,7 +327,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
@@ -366,7 +366,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         // Mikel begins
         $game->handleAction(['uid' => '123', 'id' => 2]);
@@ -402,7 +402,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         // Mikel begins
         $game->handleAction(['uid' => '123', 'id' => 2]);
@@ -435,7 +435,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
@@ -465,7 +465,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
@@ -499,7 +499,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
@@ -533,7 +533,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         $this->assertEquals('Prinz', current($mikel->getPlayerState()->getCards())['name']);
 
@@ -572,7 +572,7 @@ class LoveLetterTest extends TestCase
         $mikel->setName('Mikel');
         $players->attach($mikel);
 
-        $game->start($players);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
 
         $this->assertEquals('Prinz', current($mikel->getPlayerState()->getCards())['name']);
 

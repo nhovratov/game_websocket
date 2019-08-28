@@ -154,69 +154,35 @@ class LoveLetter implements GameInterface
     public function __construct($stackProvider = null)
     {
         $this->stackProvider = $stackProvider ?? new StackProvider();
-    }
-
-    /**
-     * @param \SplObjectStorage $players
-     */
-    public function start($players)
-    {
-        // Start new game with new players
-        if (!$this->players) {
-            if (count($players) < 2) {
-                return;
-            }
-            $this->players = $players;
-        }
-
-        // Reset state
-        $this->stack = $this->stackProvider->getStack();
-        $this->protectedPlayers = [];
-        $this->outOfGameCards = [];
-        $this->activeCard = null;
-        $this->resetGuardianEffect();
-        $this->winners = [];
-        $this->outOfGamePlayers = [];
-        $this->gameFinished = false;
-        $this->activePlayer = null;
-        $this->gameStarted = true;
-
-        // Draw cards
-        foreach ($this->players as $player) {
-            if (!$state = $player->getPlayerState()) {
-                $state = new PlayerState();
-                $player->setPlayerState($state);
-            } else {
-                $state->reset();
-            }
-            $state->addCard($this->drawCard());
-
-            if ($player->isHost()) {
-                $this->activePlayer = $player;
-            }
-        }
-        $this->reserve[0] = $this->drawCard();
-        if ($this->players->count() === 2) {
-            for ($i = 0; $i < 3; $i++) {
-                $this->outOfGameCards[] = $this->drawCard();
-            }
-        }
-
-        $this->status = 'Host wählt ersten Spieler...';
-        $this->waitFor = self::SELECT_FIRST_PLAYER;
-        $this->updateState();
+        $this->waitFor = self::START_NEW_GAME;
     }
 
     public function handleAction($params = [])
     {
-        // No actions allowed yet
-        if (!$this->waitFor) {
+        if (key_exists('players', $params)) {
+            $players = $params['players'];
+            // TODO Replace this condition with 'gameIsFinished' when rounds are implemented
+            // Start new game with new players
+            if (!$this->players) {
+                if (count($players) < 2) {
+                    return;
+                }
+                $this->players = $players;
+                foreach ($this->players as $player) {
+                    if ($player->isHost()) {
+                        $this->activePlayer = $player;
+                    }
+                }
+            }
+        }
+
+        // Game has not started yet
+        if (!$this->activePlayer) {
             return;
         }
 
-        // Some player tried to hijack the current players turn.
+        // This player has not the turn
         if (!$this->activePlayer->isUserIdentifier($params['uid'])) {
-            echo "Player {$params['uid']} tried to hijack this turn. This will be reported.\n";
             return;
         }
 
@@ -238,6 +204,10 @@ class LoveLetter implements GameInterface
                 break;
             case self::SELECT_FIRST_PLAYER:
                 $this->setupFirstTurnAction($params);
+                break;
+            case self::START_NEW_GAME:
+                $this->startAction();
+                break;
         }
 
         // After each end of effect, we check if the game is finished by now
@@ -250,7 +220,7 @@ class LoveLetter implements GameInterface
         $this->updateState();
     }
 
-    protected function updateState()
+    public function updateState()
     {
         if (!$this->players) {
             return;
@@ -303,8 +273,8 @@ class LoveLetter implements GameInterface
      */
     protected function getAllowedActionByPlayer(Player $player)
     {
-        if (!$this->gameStarted) {
-            return '';
+        if (!$this->gameStarted && $player->isHost()) {
+            return self::START_NEW_GAME;
         }
 
         $isPlayerTurn = $player->getId() === $this->getActivePlayerId();
@@ -345,6 +315,40 @@ class LoveLetter implements GameInterface
         /** @var PlayerState $state */
         $state = $this->activePlayer->getPlayerState();
         $state->addCard($this->drawCard());
+    }
+
+    protected function startAction()
+    {
+        // Reset state
+        $this->stack = $this->stackProvider->getStack();
+        $this->protectedPlayers = [];
+        $this->outOfGameCards = [];
+        $this->activeCard = null;
+        $this->resetGuardianEffect();
+        $this->winners = [];
+        $this->outOfGamePlayers = [];
+        $this->gameFinished = false;
+        $this->gameStarted = true;
+
+        // Draw cards
+        foreach ($this->players as $player) {
+            if (!$state = $player->getPlayerState()) {
+                $state = new PlayerState();
+                $player->setPlayerState($state);
+            } else {
+                $state->reset();
+            }
+            $state->addCard($this->drawCard());
+        }
+        $this->reserve[0] = $this->drawCard();
+        if ($this->players->count() === 2) {
+            for ($i = 0; $i < 3; $i++) {
+                $this->outOfGameCards[] = $this->drawCard();
+            }
+        }
+
+        $this->status = 'Host wählt ersten Spieler...';
+        $this->waitFor = self::SELECT_FIRST_PLAYER;
     }
 
     protected function setupFirstTurnAction($params)

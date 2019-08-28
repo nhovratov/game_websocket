@@ -8,10 +8,9 @@
 
 namespace NH;
 
-
 interface GameInterface
 {
-    function start($players);
-
     function handleAction($params);
+
+    function updateState();
 }

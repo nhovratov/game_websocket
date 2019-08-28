@@ -109,6 +109,7 @@ class Game implements MessageComponentInterface
         if (isset($msg['name']) && $msg['name'] !== '') {
             echo "Name {$msg['name']} provided. Set name.\n";
             $player->setName($msg['name']);
+            $this->game->updateState();
         }
 
         if (isset($msg['action'])) {
@@ -117,24 +118,22 @@ class Game implements MessageComponentInterface
                 $params = $msg['params'];
             }
             $params['uid'] = $msg['id'];
-            switch ($msg['action']) {
-                // This action requires host rights
-                case 'start':
-                    if (!$player->isHost()) {
-                        break;
+            if ($msg['action'] == 'start') {
+                if (!$player->isHost()) {
+                    $this->removeClient($player);
+                    $this->update();
+                    return;
+                }
+                $players = clone $this->players;
+                foreach ($players as $p) {
+                    if (!$p->getClient()) {
+                        $players->detach($p);
                     }
-                    $players = clone $this->players;
-                    foreach ($players as $p) {
-                        if (!$p->getClient()) {
-                            $players->detach($p);
-                        }
-                    }
-                    $players->rewind();
-                    $this->game->start($players);
-                    break;
-                default:
-                    $this->game->handleAction($params);
+                }
+                $players->rewind();
+                $params['players'] = $players;
             }
+            $this->game->handleAction($params);
         }
         $this->update();
         echo "END ONMESSAGE";
