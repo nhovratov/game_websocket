@@ -23,8 +23,8 @@ class King extends AbstractCard implements EffectInterface
         }
 
         $chosenPlayer = $game->getPlayerById($params['id']);
-        $chosenPlayerState = $chosenPlayer->getGameState();
-        $activePlayerState = $game->getActivePlayerGameState();
+        $chosenPlayerState = $chosenPlayer->getPlayerState();
+        $activePlayerState = $game->getActivePlayerState();
 
         // Swap cards
         $activePlayerCards = $activePlayerState->getCards();

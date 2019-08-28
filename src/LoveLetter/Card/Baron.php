@@ -24,8 +24,8 @@ class Baron extends AbstractCard implements EffectInterface
 
         $id = (int)$params['id'];
         $enemy = $game->getPlayerById($id);
-        $activePlayerState = $game->getActivePlayerGameState();
-        $enemyPlayerState = $enemy->getGameState();
+        $activePlayerState = $game->getActivePlayerState();
+        $enemyPlayerState = $enemy->getPlayerState();
         $activePlayerCard = $game->getHandCard($activePlayerState->getCards());
         $enemyPlayerCard = $game->getHandCard($enemyPlayerState->getCards());
         switch ($activePlayerCard['value'] <=> $enemyPlayerCard['value']) {

@@ -38,6 +38,11 @@ class PlayerState implements StateInterface
      */
     protected $discardPile = [];
 
+    /**
+     * @var int
+     */
+    protected $wins = 0;
+
     public function getState()
     {
         return [
@@ -52,6 +57,7 @@ class PlayerState implements StateInterface
     {
         $this->cards = [];
         $this->openEffectCards = [];
+        $this->priestEffectVisibleCard = '';
         $this->allowedAction = '';
         $this->discardPile = [];
     }
@@ -162,5 +168,10 @@ class PlayerState implements StateInterface
     public function discardOpenEffectCard()
     {
         $this->discardCard($this->openEffectCards);
+    }
+
+    public function addWin()
+    {
+        $this->wins += 1;
     }
 }

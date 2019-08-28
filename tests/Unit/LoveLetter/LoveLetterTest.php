@@ -45,14 +45,14 @@ class LoveLetterTest extends TestCase
         $this->assertCount(3, $state['outOfGameCards']);
         $this->assertEquals($game::SELECT_FIRST_PLAYER, $game->getWaitFor());
 
-        $playerState = $player1->getGameState();
+        $playerState = $player1->getPlayerState();
         $this->assertCount(1, $playerState->getCards());
 
         $cards = $playerState->getCards();
         $handCard = current($cards);
         $this->assertEquals('Wächterin', $handCard['name']);
 
-        $playerState = $player2->getGameState();
+        $playerState = $player2->getPlayerState();
         $this->assertCount(1, $playerState->getCards());
         $cards = $playerState->getCards();
         $handCard = current($cards);
@@ -235,7 +235,7 @@ class LoveLetterTest extends TestCase
         // John chooses Mikel to look into his card
         $game->handleAction(['uid' => '123', 'id' => 2]);
         $this->assertEquals($game::FINISH_LOOKING_AT_CARD, $game->getWaitFor());
-        $johnState = $john->getGameState();
+        $johnState = $john->getPlayerState();
         $this->assertEquals(Priest::$name, $johnState->getPriestEffectVisibleCard());
 
         // John finishes looking at Mikels cards and discards his card
@@ -459,7 +459,7 @@ class LoveLetterTest extends TestCase
         $game->handleAction(['uid' => '123', 'id' => 2]);
 
         // Mikel discards his baron and draws a king
-        $this->assertEquals('König', current($mikel->getGameState()->getCards())['name']);
+        $this->assertEquals('König', current($mikel->getPlayerState()->getCards())['name']);
         $state = $game->getGlobalState();
         $this->assertFalse($state['gameFinished']);
         $this->assertEmpty($state['winners']);
@@ -484,7 +484,7 @@ class LoveLetterTest extends TestCase
 
         $game->start($players);
 
-        $this->assertEquals('Prinz', current($mikel->getGameState()->getCards())['name']);
+        $this->assertEquals('Prinz', current($mikel->getPlayerState()->getCards())['name']);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
@@ -496,7 +496,7 @@ class LoveLetterTest extends TestCase
         $game->handleAction(['uid' => '123', 'id' => 2]);
 
         // Mikel swaps his prince with a baron
-        $this->assertEquals(Baron::$name, current($mikel->getGameState()->getCards())['name']);
+        $this->assertEquals(Baron::$name, current($mikel->getPlayerState()->getCards())['name']);
 
         $state = $game->getGlobalState();
         $this->assertTrue($state['gameFinished']);
@@ -523,7 +523,7 @@ class LoveLetterTest extends TestCase
 
         $game->start($players);
 
-        $this->assertEquals('Prinz', current($mikel->getGameState()->getCards())['name']);
+        $this->assertEquals('Prinz', current($mikel->getPlayerState()->getCards())['name']);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
@@ -531,12 +531,12 @@ class LoveLetterTest extends TestCase
         // John chooses prince card (invalid)
         $game->handleAction(['uid' => '123', 'key' => 2]);
 
-        $this->assertCount(2, $john->getGameState()->getCards());
+        $this->assertCount(2, $john->getPlayerState()->getCards());
 
         // Ok, John have to choose the countess ...
         $game->handleAction(['uid' => '123', 'key' => 8]);
 
-        $this->assertCount(1, $john->getGameState()->getCards());
+        $this->assertCount(1, $john->getPlayerState()->getCards());
         $this->assertEquals(LoveLetter::CONFIRM_DISCARD_CARD, $game->getWaitFor());
     }
 }

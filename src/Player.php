@@ -8,7 +8,6 @@
 
 namespace NH;
 
-use NH\LoveLetter\LoveLetter;
 use NH\LoveLetter\PlayerState;
 use Ratchet\ConnectionInterface;
 
@@ -32,7 +31,7 @@ class Player
     /**
      * @var PlayerState
      */
-    private $gameState = null;
+    private $playerState = null;
 
     /**
      * @var string
@@ -65,19 +64,19 @@ class Player
     }
 
     /**
-     * @param PlayerState $gameState
+     * @param PlayerState $playerState
      */
-    public function setGameState(PlayerState $gameState)
+    public function setPlayerState(PlayerState $playerState)
     {
-        $this->gameState = $gameState;
+        $this->playerState = $playerState;
     }
 
     /**
      * @return PlayerState
      */
-    public function getGameState()
+    public function getPlayerState()
     {
-        return $this->gameState;
+        return $this->playerState;
     }
 
     /**

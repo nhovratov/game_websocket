@@ -23,16 +23,16 @@ class Prince extends AbstractCard implements EffectInterface
         }
 
         $chosenPlayer = $game->getPlayerById($params['id']);
-        $gameState = $chosenPlayer->getGameState();
-        $cards = $gameState->getCards();
+        $state = $chosenPlayer->getPlayerState();
+        $cards = $state->getCards();
         $card = current($cards);
-        $gameState->discardHandCard();
+        $state->discardHandCard();
         $game->setStatus('Die Karte ' . $card['name'] . ' von ' . $chosenPlayer->getName() . ' wurde abgeworfen ');
         if ($card['name'] === 'Prinzessin') {
             $game->addOutOfGamePlayer($chosenPlayer->getId());
             $game->setStatus($game->getStatus() . 'und ist deshalb ausgeschieden. ');
         } else {
-            $gameState->addCard($game->drawCard());
+            $state->addCard($game->drawCard());
             $game->setStatus($game->getStatus() . 'und eine neue Karte wurde gezogen. ');
         }
         $game->setWaitFor(LOVELETTER::CONFIRM_DISCARD_CARD);

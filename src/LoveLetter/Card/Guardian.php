@@ -46,7 +46,7 @@ class Guardian extends AbstractCard implements EffectInterface
         }
         $card = $params['card'];
         // TODO Check if card is valid
-        $chosenPlayerState = $chosenPlayer->getGameState();
+        $chosenPlayerState = $chosenPlayer->getPlayerState();
         $chosenPlayerCard = array_slice($chosenPlayerState->getCards(), 0, 1)[0];
         if ($card === $chosenPlayerCard['name']) {
             $game->addOutOfGamePlayer($chosenPlayer->getId());

@@ -160,12 +160,15 @@ class LoveLetter implements GameInterface
      */
     public function start($players)
     {
-        if (count($players) < 2) {
-            return;
+        // Start new game with new players
+        if (!$this->players) {
+            if (count($players) < 2) {
+                return;
+            }
+            $this->players = $players;
         }
 
         // Reset state
-        $this->players = $players;
         $this->stack = [];
         $this->reserve = [];
         $this->protectedPlayers = [];
@@ -181,9 +184,14 @@ class LoveLetter implements GameInterface
 
         // Draw cards
         foreach ($this->players as $player) {
-            $gameState = new PlayerState();
-            $gameState->addCard($this->drawCard());
-            $player->setGameState($gameState);
+            if (!$state = $player->getPlayerState()) {
+                $state = new PlayerState();
+                $player->setPlayerState($state);
+            } else {
+                $state->reset();
+            }
+            $state->addCard($this->drawCard());
+
             if ($player->isHost()) {
                 $this->activePlayer = $player;
             }
@@ -232,6 +240,14 @@ class LoveLetter implements GameInterface
             case self::SELECT_FIRST_PLAYER:
                 $this->setupFirstTurnAction($params);
         }
+
+        // After each end of effect, we check if the game is finished by now
+        if ($this->isGameFinished()) {
+            $this->gameFinished = true;
+            $this->gameStarted = false;
+            $this->waitFor = self::START_NEW_GAME;
+        }
+
         $this->updateState();
     }
 
@@ -246,12 +262,12 @@ class LoveLetter implements GameInterface
             if (!$player->getClient()) {
                 continue;
             }
-            $gameState = $player->getGameState();
-            $gameState->setAllowedAction($this->getAllowedActionByPlayer($player));
+            $state = $player->getPlayerState();
+            $state->setAllowedAction($this->getAllowedActionByPlayer($player));
             $msg = [
                 'dataType' => 'game',
                 'global' => $this->getGlobalState(),
-                'local' => $gameState->getState()
+                'local' => $state->getState()
             ];
             if ($playerinfo) {
                 $msg['global']['players'] = $playerinfo;
@@ -319,9 +335,9 @@ class LoveLetter implements GameInterface
     {
         $this->activePlayer = $this->getNextPlayer();
         if (in_array($this->activePlayer->getId(), $this->protectedPlayers)) {
-            /** @var PlayerState $gameState */
-            $gameState = $this->activePlayer->getGameState();
-            $gameState->discardOpenEffectCard();
+            /** @var PlayerState $state */
+            $state = $this->activePlayer->getPlayerState();
+            $state->discardOpenEffectCard();
             $key = array_search($this->activePlayer->getId(), $this->protectedPlayers);
             array_splice($this->protectedPlayers, $key, 1);
         }
@@ -332,9 +348,9 @@ class LoveLetter implements GameInterface
 
     protected function drawCardForActivePlayer()
     {
-        /** @var PlayerState $gameState */
-        $gameState = $this->activePlayer->getGameState();
-        $gameState->addCard($this->drawCard());
+        /** @var PlayerState $state */
+        $state = $this->activePlayer->getPlayerState();
+        $state->addCard($this->drawCard());
     }
 
     protected function setupFirstTurnAction($params)
@@ -365,9 +381,9 @@ class LoveLetter implements GameInterface
             return false;
         }
         $key = $params['key'];
-        /** @var PlayerState $gameState */
-        $gameState = $this->activePlayer->getGameState();
-        $cards = $gameState->getCards();
+        /** @var PlayerState $state */
+        $state = $this->activePlayer->getPlayerState();
+        $cards = $state->getCards();
         if (!Validator::validateCardCanBeSet($cards, $key)) {
             return false;
         }
@@ -375,22 +391,22 @@ class LoveLetter implements GameInterface
         $index = array_search($key, array_keys($cards));
         array_slice($cards, $index, 1);
         unset($cards[$key]);
-        $gameState->setCards($cards);
+        $state->setCards($cards);
         $this->handleEffectAction();
     }
 
     protected function discardActiveCardAction()
     {
-        $this->activePlayer->getGameState()->addToDicardPile($this->activeCard);
+        $this->activePlayer->getPlayerState()->addToDicardPile($this->activeCard);
         $this->activeCard = null;
         $this->nextTurn();
     }
 
     protected function placeMaidCardAction()
     {
-        /** @var PlayerState $gameState */
-        $gameState = $this->activePlayer->getGameState();
-        $gameState->addOpenEffectCard($this->activeCard);
+        /** @var PlayerState $state */
+        $state = $this->activePlayer->getPlayerState();
+        $state->addOpenEffectCard($this->activeCard);
         $this->activeCard = null;
         $this->nextTurn();
     }
@@ -399,12 +415,6 @@ class LoveLetter implements GameInterface
     {
         $cardClass = self::CARDS[$this->activeCard['id']];
         $cardClass::activate($this, $params);
-        // After each end of effect, we check if the game is finished by now
-        if ($this->isGameFinished()) {
-            $this->gameFinished = true;
-            $this->gameStarted = false;
-            $this->waitFor = self::START_NEW_GAME;
-        }
     }
 
     protected function isGameFinished()
@@ -432,7 +442,7 @@ class LoveLetter implements GameInterface
             /** @var Player $player */
             foreach ($this->players as $player) {
                 /** @var PlayerState $state */
-                $state = $player->getGameState();
+                $state = $player->getPlayerState();
                 $card = current($state->getCards());
                 $currentValue = $card['value'];
                 if ($currentValue > $highestValue) {
@@ -441,7 +451,7 @@ class LoveLetter implements GameInterface
             }
             foreach ($this->players as $player) {
                 /** @var PlayerState $state */
-                $state = $player->getGameState();
+                $state = $player->getPlayerState();
                 $card = current($state->getCards());
                 if ($card['value'] === $highestValue) {
                     $this->winners[] = $player->getId();
@@ -534,7 +544,7 @@ class LoveLetter implements GameInterface
             $players[] = [
                 'id' => $player->getId(),
                 'name' => $player->getName(),
-                'discardPile' => $player->getGameState()->getDiscardPile()
+                'discardPile' => $player->getPlayerState()->getDiscardPile()
             ];
         }
         return $players;
@@ -584,9 +594,9 @@ class LoveLetter implements GameInterface
     /**
      * @return StateInterface
      */
-    public function getActivePlayerGameState(): StateInterface
+    public function getActivePlayerState(): StateInterface
     {
-        return $this->activePlayer->getGameState();
+        return $this->activePlayer->getPlayerState();
     }
 
     /**
