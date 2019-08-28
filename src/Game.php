@@ -153,7 +153,6 @@ class Game implements MessageComponentInterface
                 'local' => $player->getLocalState()
             ]));
         }
-        $this->game->updateState();
     }
 
     protected function createNewPlayer($from)
