@@ -33,9 +33,16 @@ class MockStackProvider extends StackProvider
         $this->insertCards($stack, Guardian::getCard(), 7);
     }
 
+    protected function guardianWinStack(&$stack)
+    {
+        $this->insertCards($stack, Guardian::getCard(), 7);
+        $this->insertCards($stack, Countess::getCard(), 1);
+        $this->insertCards($stack, Guardian::getCard(), 1);
+    }
+
     protected function maidStack(&$stack)
     {
-        $this->insertCards($stack, Maid::getCard(), 6);
+        $this->insertCards($stack, Maid::getCard(), 7);
         $this->insertCards($stack, Guardian::getCard(), 1);
         $this->insertCards($stack, Maid::getCard(), 1);
     }
@@ -79,7 +86,7 @@ class MockStackProvider extends StackProvider
 
     protected function princeNormalStack(&$stack)
     {
-        $this->insertCards($stack, King::getCard(), 10);
+        $this->insertCards($stack, King::getCard(), 5);
         $this->insertCards($stack, Baron::getCard(), 1);
         $this->insertCards($stack, Prince::getCard(), 1);
     }

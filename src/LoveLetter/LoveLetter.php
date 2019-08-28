@@ -169,8 +169,7 @@ class LoveLetter implements GameInterface
         }
 
         // Reset state
-        $this->stack = [];
-        $this->reserve = [];
+        $this->stack = $this->stackProvider->getStack();
         $this->protectedPlayers = [];
         $this->outOfGameCards = [];
         $this->activeCard = null;
@@ -179,7 +178,6 @@ class LoveLetter implements GameInterface
         $this->outOfGamePlayers = [];
         $this->gameFinished = false;
         $this->activePlayer = null;
-        $this->stack = $this->stackProvider->getStack();
         $this->gameStarted = true;
 
         // Draw cards
@@ -196,7 +194,7 @@ class LoveLetter implements GameInterface
                 $this->activePlayer = $player;
             }
         }
-        $this->reserve[] = $this->drawCard();
+        $this->reserve[0] = $this->drawCard();
         if ($this->players->count() === 2) {
             for ($i = 0; $i < 3; $i++) {
                 $this->outOfGameCards[] = $this->drawCard();
@@ -393,6 +391,7 @@ class LoveLetter implements GameInterface
         unset($cards[$key]);
         $state->setCards($cards);
         $this->handleEffectAction();
+        return true;
     }
 
     protected function discardActiveCardAction()

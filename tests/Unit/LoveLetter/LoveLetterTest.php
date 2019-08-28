@@ -10,6 +10,7 @@ use NH\LoveLetter\Card\Baron;
 use NH\LoveLetter\Card\Guardian;
 use NH\LoveLetter\Card\Priest;
 use NH\LoveLetter\LoveLetter;
+use NH\LoveLetter\StackProvider;
 use NH\Mock\MockStackProvider;
 use NH\Player;
 use PHPUnit\Framework\TestCase;
@@ -163,6 +164,51 @@ class LoveLetterTest extends TestCase
     /**
      * @test
      */
+    public function testGuardianWin()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('guardianWin');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1, '123');
+        $john->setName('John');
+        $john->setIsHost(true);
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2, '234');
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->start($players);
+
+        // John begins
+        $game->handleAction(['uid' => '123', 'id' => 1]);
+        $state = $game->getGlobalState();
+        $this->assertEquals($game::CHOOSE_CARD, $game->getWaitFor());
+        $this->assertEquals(1, $state['playerTurn']);
+
+        // John chooses Guardian card
+        $game->handleAction(['uid' => '123', 'key' => 9]);
+        $state = $game->getGlobalState();
+        $this->assertEquals($game::CHOOSE_PLAYER, $game->getWaitFor());
+        $this->assertEquals('Wächterin', $state['activeCard']['name']);
+
+        // Select Mikel for Effect card
+        $game->handleAction(['uid' => '123', 'id' => 2]);
+        $this->assertEquals($game::CHOOSE_GUARDIAN_EFFECT_CARD, $game->getWaitFor());
+
+        // Select Countess (right)
+        $game->handleAction(['uid' => '123', 'card' => 'Gräfin']);
+
+        // John chooses right, he wins and game is finished
+        $state = $game->getGlobalState();
+        $this->assertTrue($state['gameFinished']);
+        $this->assertCount(1, $state['winners']);
+        $this->assertEquals($game::START_NEW_GAME, $game->getWaitFor());
+    }
+
+    /**
+     * @test
+     */
     public function testMaid()
     {
         $players = new SplObjectStorage();
@@ -183,7 +229,7 @@ class LoveLetterTest extends TestCase
         $game->handleAction(['uid' => '123', 'id' => 1]);
 
         // John chooses Maid card
-        $game->handleAction(['uid' => '123', 'key' => 8]);
+        $game->handleAction(['uid' => '123', 'key' => 9]);
         $state = $game->getGlobalState();
         $this->assertEquals($game::PLACE_MAID_CARD, $game->getWaitFor());
         $this->assertEquals('Zofe', $state['activeCard']['name']);
@@ -194,14 +240,15 @@ class LoveLetterTest extends TestCase
         $this->assertEquals(2, $state['playerTurn']);
         $this->assertEquals($game::CHOOSE_CARD, $game->getWaitFor());
 
-        // Select Guardian, but no selectable player left
-        $game->handleAction(['uid' => '234', 'key' => 7]);
+        $this->assertCount(1, $state['protectedPlayers']);
 
-        // No cards left, game is finished with a tie
+        // Select Guardian, but no selectable player left
+        $game->handleAction(['uid' => '234', 'key' => 8]);
+        $game->handleAction(['uid' => '234']);
+
         $state = $game->getGlobalState();
-        $this->assertTrue($state['gameFinished']);
-        $this->assertCount(2, $state['winners']);
-        $this->assertEquals($game::START_NEW_GAME, $game->getWaitFor());
+        $this->assertEmpty($state['protectedPlayers']);
+        $this->assertFalse($state['gameFinished']);
     }
 
     /**
@@ -418,7 +465,7 @@ class LoveLetterTest extends TestCase
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
 
-        // John chooses price card
+        // John chooses prince card
         $game->handleAction(['uid' => '123', 'key' => 12]);
 
         // John chooses Mikel to discard his card
@@ -453,16 +500,15 @@ class LoveLetterTest extends TestCase
         $game->handleAction(['uid' => '123', 'id' => 1]);
 
         // John chooses prince card
-        $game->handleAction(['uid' => '123', 'key' => 12]);
+        $game->handleAction(['uid' => '123', 'key' => 7]);
 
-        // John chooses Mikel to discard his card
+        // John chooses Mikel to discard his card. He has to draw from the reserve
         $game->handleAction(['uid' => '123', 'id' => 2]);
 
         // Mikel discards his baron and draws a king
         $this->assertEquals('König', current($mikel->getPlayerState()->getCards())['name']);
         $state = $game->getGlobalState();
-        $this->assertFalse($state['gameFinished']);
-        $this->assertEmpty($state['winners']);
+        $this->assertTrue($state['gameFinished']);
     }
 
     /**
@@ -538,5 +584,15 @@ class LoveLetterTest extends TestCase
 
         $this->assertCount(1, $john->getPlayerState()->getCards());
         $this->assertEquals(LoveLetter::CONFIRM_DISCARD_CARD, $game->getWaitFor());
+    }
+
+    /**
+     * @test
+     */
+    public function testStackProvider()
+    {
+        $stackProvider = new StackProvider();
+        $stack = $stackProvider->getStack();
+        $this->assertCount(16, $stack);
     }
 }

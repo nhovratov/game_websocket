@@ -26,7 +26,7 @@ class Player
     /**
      * @var string
      */
-    private $uid = '';
+    private $sessionId = '';
 
     /**
      * @var PlayerState
@@ -47,14 +47,14 @@ class Player
     {
         $this->client = $client;
         $this->id = $id;
-        $this->uid = $uid;
+        $this->sessionId = $uid;
     }
 
     /**
      * Local game state
      * @return array
      */
-    public function getState()
+    public function getLocalState()
     {
         return [
             "id" => $this->id,
@@ -93,7 +93,7 @@ class Player
      */
     public function isUserIdentifier($value): bool
     {
-        return $this->uid === $value;
+        return $this->sessionId === $value;
     }
 
     /**
