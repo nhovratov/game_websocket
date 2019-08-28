@@ -53,6 +53,7 @@ class LoveLetter implements GameInterface
     ];
 
     const GUARDIAN_EFFECT_DEFAULT = [
+        'id' => 0,
         'name' => '',
         'selectableCards' => [
             'Priester',
@@ -249,15 +250,6 @@ class LoveLetter implements GameInterface
         $this->updateState();
     }
 
-    public function drawCard()
-    {
-        if (count($this->stack) > 0) {
-            return array_pop($this->stack);
-        } else {
-            return array_pop($this->reserve);
-        }
-    }
-
     protected function updateState()
     {
         if (!$this->players) {
@@ -315,9 +307,10 @@ class LoveLetter implements GameInterface
             return '';
         }
 
+        $isPlayerTurn = $player->getId() === $this->getActivePlayerId();
         switch ($this->waitFor) {
             case self::CHOOSE_PLAYER:
-                if (!$this->isPlayerTurn($player)) {
+                if (!$isPlayerTurn) {
                     return '';
                 }
                 return $this->isAnyOtherPlayerSelectable() ? $this->waitFor : self::CONFIRM_DISCARD_CARD;
@@ -328,7 +321,7 @@ class LoveLetter implements GameInterface
                 break;
 
             default:
-                return $this->isPlayerTurn($player) ? $this->waitFor : '';
+                return $isPlayerTurn ? $this->waitFor : '';
         }
     }
 
@@ -472,35 +465,20 @@ class LoveLetter implements GameInterface
         return false;
     }
 
-    /**
-     * @param Player $player
-     * @return bool
-     */
-    protected function isPlayerSelectable($player)
-    {
-        return !in_array($player->getId(), $this->outOfGamePlayers)
-            && !in_array($player->getId(), $this->protectedPlayers);
-    }
-
     protected function isAnyOtherPlayerSelectable()
     {
         /** @var Player $player */
         $players = clone $this->players;
         foreach ($players as $player) {
-            if ($this->isPlayerSelectable($player) && $player->getId() !== $this->getActivePlayerId()) {
+            $isSelectable =
+                   !in_array($player->getId(), $this->outOfGamePlayers)
+                && !in_array($player->getId(), $this->protectedPlayers);
+
+            if ($isSelectable && $player->getId() !== $this->getActivePlayerId()) {
                 return true;
             }
         }
         return false;
-    }
-
-    /**
-     * @param Player $player
-     * @return bool
-     */
-    protected function isPlayerTurn(Player $player)
-    {
-        return $player->getId() === $this->getActivePlayerId();
     }
 
     /**
@@ -524,15 +502,22 @@ class LoveLetter implements GameInterface
                     if (in_array($this->players->current()->getId(), $this->outOfGamePlayers)) {
                         $this->players->next();
                     } else {
-                        /** @var Player $nextPlayer */
-                        $nextPlayer = $this->players->current();
-                        return $nextPlayer;
+                        return $this->players->current();
                     }
                 }
             }
             $this->players->next();
         }
         return false;
+    }
+
+    public function drawCard()
+    {
+        if (count($this->stack) > 0) {
+            return array_pop($this->stack);
+        } else {
+            return array_pop($this->reserve);
+        }
     }
 
     /**
@@ -549,15 +534,6 @@ class LoveLetter implements GameInterface
             }
         }
         return false;
-    }
-
-    /**
-     * @param array $cards
-     * @return array
-     */
-    public function getHandCard(array $cards)
-    {
-        return array_slice($cards, 0, 1)[0];
     }
 
     /**

@@ -174,4 +174,12 @@ class PlayerState implements StateInterface
     {
         $this->wins += 1;
     }
+
+    /**
+     * @return array
+     */
+    public function getHandCard()
+    {
+        return array_slice($this->cards, 0, 1)[0];
+    }
 }
