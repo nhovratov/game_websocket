@@ -41,11 +41,17 @@ class LoveLetterTest extends TestCase
         $player2 = new Player(new Connection(), 2, '234');
         $player1->setIsHost(true);
         $players->attach($player1);
-        $players->attach($player2);
 
+        // Starting game with 1 Player should not be possible.
         $game->handleAction(['uid' => '123', 'players' => $players]);
-        $state = $this->getGameState($player1);
 
+        // Game has not started yet
+        $game->handleAction(['uid' => '123', 'name' => 'John']);
+
+        $players->attach($player2);
+        $game->handleAction(['uid' => '123', 'players' => $players]);
+
+        $state = $this->getGameState($player1);
         $this->assertCount(2, $state['players']);
         $this->assertTrue($state['gameStarted']);
         $this->assertCount(3, $state['outOfGameCards']);
@@ -76,10 +82,12 @@ class LoveLetterTest extends TestCase
     {
         $players = new SplObjectStorage();
         $game = new LoveLetter($this->mockStackProvider);
+        $game->updateState();
         $player1 = new Player(new Connection(), 1, '123');
         $player1->setIsHost(true);
         $players->attach($player1);
-        $players->attach(new Player(new Connection(), 2, '234'));
+        $player2 = new Player(new Connection(), 2, '234');
+        $players->attach($player2);
         $players->attach(new Player(new Connection(), 3, '345'));
 
         $game->handleAction(['uid' => '123', 'players' => $players]);
@@ -88,6 +96,11 @@ class LoveLetterTest extends TestCase
         $this->assertCount(3, $state['players']);
         $this->assertTrue($state['gameStarted']);
         $this->assertCount(0, $state['outOfGameCards']);
+
+        $player2->removeClient();
+        $game->handleAction(['uid' => '123', 'bla' => 2]);
+        $game->handleAction(['uid' => '123', 'id' => 400]);
+        $game->handleAction(['uid' => '123', 'id' => 2]);
     }
 
     /**
@@ -108,6 +121,9 @@ class LoveLetterTest extends TestCase
         $players->attach($mikel);
 
         $game->handleAction(['uid' => '123', 'players' => $players]);
+
+        // Mikel tries to hack
+        $game->handleAction(['uid' => '234', 'id' => 1]);
 
         // John begins
         $game->handleAction(['uid' => '123', 'id' => 1]);
