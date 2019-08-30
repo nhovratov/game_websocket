@@ -20,6 +20,7 @@ class MockStackProvider extends StackProvider
         $stack = [];
         $methodName = "{$this->testcase}Stack";
         $this->$methodName($stack);
+        $this->counter = 1;
         return $stack;
     }
 

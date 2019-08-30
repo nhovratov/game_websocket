@@ -6,7 +6,6 @@
  * Time: 23:44
  */
 
-use NH\LoveLetter\Card\Baron;
 use NH\LoveLetter\Card\Guardian;
 use NH\LoveLetter\Card\Priest;
 use NH\LoveLetter\LoveLetter;
@@ -177,9 +176,12 @@ class LoveLetterTest extends TestCase
 
         // No cards left, game is finished with a tie
         $state = $this->getGameState($john);
-        $this->assertTrue($state['gameFinished']);
-        $this->assertCount(2, $state['winners']);
-        $this->assertEquals($game::START_NEW_GAME, $game->getWaitFor());
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(1, $johnState->getWins());
+        $this->assertEquals(1, $mikelState->getWins());
+        $this->assertFalse($state['gameFinished']);
+        $this->assertEquals($game::CHOOSE_CARD, $game->getWaitFor());
     }
 
     /**
@@ -220,11 +222,98 @@ class LoveLetterTest extends TestCase
         // Select Countess (right)
         $game->handleAction(['uid' => '123', 'card' => 'Gräfin']);
 
-        // John chooses right, he wins and game is finished
+        // John chooses right, he wins and round is finished
+        $state = $this->getGameState($john);
+        $this->assertFalse($state['gameFinished']);
+        $this->assertTrue($state['gameStarted']);
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(1, $johnState->getWins());
+        $this->assertEquals(0, $mikelState->getWins());
+        $this->assertEquals($game::CHOOSE_CARD, $game->getWaitFor());
+
+        // Round 2
+        // John chooses Guardian card
+        $game->handleAction(['uid' => '123', 'key' => 9]);
+
+        // Select Mikel for Effect card
+        $game->handleAction(['uid' => '123', 'id' => 2]);
+
+        // Select Countess (right)
+        $game->handleAction(['uid' => '123', 'card' => 'Gräfin']);
+
+        // John chooses right, he wins and round is finished
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(2, $johnState->getWins());
+        $this->assertEquals(0, $mikelState->getWins());
+        $this->assertEquals($game::CHOOSE_CARD, $game->getWaitFor());
+
+        // Round 3
+        // John chooses Guardian card
+        $game->handleAction(['uid' => '123', 'key' => 9]);
+
+        // Select Mikel for Effect card
+        $game->handleAction(['uid' => '123', 'id' => 2]);
+
+        // Select Countess (right)
+        $game->handleAction(['uid' => '123', 'card' => 'Gräfin']);
+
+        // John chooses right, he wins and round is finished
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(3, $johnState->getWins());
+        $this->assertEquals(0, $mikelState->getWins());
+        $this->assertEquals($game::CHOOSE_CARD, $game->getWaitFor());
+
+        // Round 4
+        // John chooses Guardian card
+        $game->handleAction(['uid' => '123', 'key' => 9]);
+
+        // Select Mikel for Effect card
+        $game->handleAction(['uid' => '123', 'id' => 2]);
+
+        // Select Countess (right)
+        $game->handleAction(['uid' => '123', 'card' => 'Gräfin']);
+
+        // John chooses right, he wins and round is finished
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(4, $johnState->getWins());
+        $this->assertEquals(0, $mikelState->getWins());
+        $this->assertEquals($game::CHOOSE_CARD, $game->getWaitFor());
+
+        // Round 5
+        // John chooses Guardian card
+        $game->handleAction(['uid' => '123', 'key' => 9]);
+
+        // Select Mikel for Effect card
+        $game->handleAction(['uid' => '123', 'id' => 2]);
+
+        // Select Countess (right)
+        $game->handleAction(['uid' => '123', 'card' => 'Gräfin']);
+
+        // John chooses right, he wins and round is finished
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
         $state = $this->getGameState($john);
         $this->assertTrue($state['gameFinished']);
-        $this->assertCount(1, $state['winners']);
+        $this->assertEquals(5, $johnState->getWins());
+        $this->assertEquals(0, $mikelState->getWins());
         $this->assertEquals($game::START_NEW_GAME, $game->getWaitFor());
+
+        // Start new game
+        $game->handleAction(['uid' => '123', 'players' => $players]);
+
+        // Player stats are resetted
+        $state = $this->getGameState($john);
+        $this->assertEmpty($state['winners']);
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(0, $johnState->getWins());
+        $this->assertEquals(0, $mikelState->getWins());
+        $this->assertEquals($game->getWaitFor(), LoveLetter::SELECT_FIRST_PLAYER);
+
     }
 
     /**
@@ -321,9 +410,12 @@ class LoveLetterTest extends TestCase
 
         // No cards left, game is finished with a tie
         $state = $this->getGameState($john);
-        $this->assertTrue($state['gameFinished']);
-        $this->assertCount(2, $state['winners']);
-        $this->assertEquals($game::START_NEW_GAME, $game->getWaitFor());
+        $this->assertFalse($state['gameFinished']);
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(1, $johnState->getWins());
+        $this->assertEquals(1, $mikelState->getWins());
+        $this->assertEquals($game::CHOOSE_CARD, $game->getWaitFor());
     }
 
     /**
@@ -359,10 +451,12 @@ class LoveLetterTest extends TestCase
 
         // Johns card 'princess(8)' is higher than Mikels card 'guardian(1)'
         $state = $this->getGameState($john);
-        $this->assertTrue($state['gameFinished']);
-        $this->assertCount(1, $state['winners']);
-        $this->assertContains(2, $state['outOfGamePlayers']);
-        $this->assertEquals($game::START_NEW_GAME, $game->getWaitFor());
+        $this->assertFalse($state['gameFinished']);
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(1, $johnState->getWins());
+        $this->assertEquals(0, $mikelState->getWins());
+        $this->assertEquals($game::CHOOSE_CARD, $game->getWaitFor());
     }
 
     /**
@@ -395,10 +489,12 @@ class LoveLetterTest extends TestCase
 
         // Johns card 'princess(8)' is higher than Mikels card 'guardian(1)'
         $state = $this->getGameState($john);
-        $this->assertTrue($state['gameFinished']);
-        $this->assertCount(1, $state['winners']);
-        $this->assertContains(2, $state['outOfGamePlayers']);
-        $this->assertEquals($game::START_NEW_GAME, $game->getWaitFor());
+        $this->assertFalse($state['gameFinished']);
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(1, $johnState->getWins());
+        $this->assertEquals(0, $mikelState->getWins());
+        $this->assertEquals($game::CHOOSE_CARD, $game->getWaitFor());
     }
 
     /**
@@ -431,6 +527,11 @@ class LoveLetterTest extends TestCase
 
         // Johns card 'princess(8)' is equal to Mikels card 'princess(8)'
         $state = $this->getGameState($john);
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(0, $johnState->getWins());
+        $this->assertEquals(0, $mikelState->getWins());
+
         $this->assertFalse($state['gameFinished']);
     }
 
@@ -460,8 +561,12 @@ class LoveLetterTest extends TestCase
         $game->handleAction(['uid' => '123', 'key' => 10]);
 
         $state = $this->getGameState($john);
-        $this->assertTrue($state['gameFinished']);
-        $this->assertContains(2, $state['winners']);
+        $this->assertFalse($state['gameFinished']);
+        $this->assertTrue($state['gameStarted']);
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(0, $johnState->getWins());
+        $this->assertEquals(1, $mikelState->getWins());
     }
 
     /**
@@ -494,8 +599,11 @@ class LoveLetterTest extends TestCase
 
         // Mikel discards his princess and the game is over
         $state = $this->getGameState($john);
-        $this->assertTrue($state['gameFinished']);
-        $this->assertContains(1, $state['winners']);
+        $this->assertFalse($state['gameFinished']);
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(1, $johnState->getWins());
+        $this->assertEquals(0, $mikelState->getWins());
     }
 
     /**
@@ -526,10 +634,13 @@ class LoveLetterTest extends TestCase
         // John chooses Mikel to discard his card. He has to draw from the reserve
         $game->handleAction(['uid' => '123', 'id' => 2]);
 
-        // Mikel discards his baron and draws a king
-        $this->assertEquals('König', current($mikel->getPlayerState()->getCards())['name']);
+        // Mikel discards his baron and draws a king so both win
         $state = $this->getGameState($john);
-        $this->assertTrue($state['gameFinished']);
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(1, $johnState->getWins());
+        $this->assertEquals(1, $mikelState->getWins());
+        $this->assertFalse($state['gameFinished']);
     }
 
     /**
@@ -562,13 +673,13 @@ class LoveLetterTest extends TestCase
         // John chooses Mikel to swap cards
         $game->handleAction(['uid' => '123', 'id' => 2]);
 
-        // Mikel swaps his prince with a baron
-        $this->assertEquals(Baron::$name, current($mikel->getPlayerState()->getCards())['name']);
-
+        // Mikel swaps his prince with a baron so he looses
         $state = $this->getGameState($john);
-        $this->assertTrue($state['gameFinished']);
-        $this->assertContains(1, $state['winners']);
-        $this->assertContains(2, $state['outOfGamePlayers']);
+        $this->assertFalse($state['gameFinished']);
+        $johnState = $john->getPlayerState();
+        $mikelState = $mikel->getPlayerState();
+        $this->assertEquals(1, $johnState->getWins());
+        $this->assertEquals(0, $mikelState->getWins());
     }
 
     /**

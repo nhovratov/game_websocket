@@ -52,6 +52,12 @@ class LoveLetter implements GameInterface
         8 => Princess::class
     ];
 
+    const PLAYER_WINS = [
+        2 => 5,
+        3 => 4,
+        4 => 3
+    ];
+
     const GUARDIAN_EFFECT_DEFAULT = [
         'id' => 0,
         'name' => '',
@@ -161,9 +167,8 @@ class LoveLetter implements GameInterface
     {
         if (key_exists('players', $params)) {
             $players = $params['players'];
-            // TODO Replace this condition with 'gameIsFinished' when rounds are implemented
             // Start new game with new players
-            if (!$this->players) {
+            if ($this->waitFor == self::START_NEW_GAME) {
                 if (count($players) < 2) {
                     return;
                 }
@@ -211,10 +216,24 @@ class LoveLetter implements GameInterface
         }
 
         // After each end of effect, we check if the game is finished by now
-        if ($this->isGameFinished()) {
-            $this->gameFinished = true;
-            $this->gameStarted = false;
-            $this->waitFor = self::START_NEW_GAME;
+        if ($this->isRoundFinished()) {
+            foreach ($this->winners as $winner) {
+                $player = $this->getPlayerById($winner);
+                $wins = $player->getPlayerState()->addWin();
+                /** TODO Handle multiple winners */
+                if ($wins == self::PLAYER_WINS[count($this->players)]) {
+                    $this->gameFinished = true;
+                }
+            }
+            // Prepare new game if someone has enough wins, else start new round
+            if ($this->gameFinished) {
+                $this->gameStarted = false;
+                $this->waitFor = self::START_NEW_GAME;
+            } else {
+                $winner = $this->winners[0];
+                $this->startAction();
+                $this->setupFirstTurnAction(['id' => $winner]);
+            }
         }
 
         $this->updateState();
@@ -232,7 +251,8 @@ class LoveLetter implements GameInterface
             $playerInfo[] = [
                 'id' => $player->getId(),
                 'name' => $player->getName(),
-                'discardPile' => $player->getPlayerState()->getDiscardPile()
+                'discardPile' => $player->getPlayerState()->getDiscardPile(),
+                'wins' => $player->getPlayerState()->getWins()
             ];
         }
 
@@ -319,7 +339,15 @@ class LoveLetter implements GameInterface
 
     protected function startAction()
     {
+        // Brand new game started, else new round
+        if ($brandNewGame = !$this->gameStarted) {
+            $this->status = 'Host wählt ersten Spieler...';
+            $this->waitFor = self::SELECT_FIRST_PLAYER;
+        }
+
         // Reset state
+        $this->gameStarted = true;
+        $this->gameFinished = false;
         $this->stack = $this->stackProvider->getStack();
         $this->protectedPlayers = [];
         $this->outOfGameCards = [];
@@ -327,8 +355,6 @@ class LoveLetter implements GameInterface
         $this->resetGuardianEffect();
         $this->winners = [];
         $this->outOfGamePlayers = [];
-        $this->gameFinished = false;
-        $this->gameStarted = true;
 
         // Draw cards
         foreach ($this->players as $player) {
@@ -337,6 +363,9 @@ class LoveLetter implements GameInterface
                 $player->setPlayerState($state);
             } else {
                 $state->reset();
+                if ($brandNewGame) {
+                    $state->resetWins();
+                }
             }
             $state->addCard($this->drawCard());
         }
@@ -346,9 +375,6 @@ class LoveLetter implements GameInterface
                 $this->outOfGameCards[] = $this->drawCard();
             }
         }
-
-        $this->status = 'Host wählt ersten Spieler...';
-        $this->waitFor = self::SELECT_FIRST_PLAYER;
     }
 
     protected function setupFirstTurnAction($params)
@@ -416,7 +442,7 @@ class LoveLetter implements GameInterface
         $cardClass::activate($this, $params);
     }
 
-    protected function isGameFinished()
+    protected function isRoundFinished()
     {
         // The only states, where the game can be determined as finished
         if (!in_array($this->waitFor, [self::CHOOSE_PLAYER, self::CONFIRM_DISCARD_CARD])) {
@@ -465,7 +491,6 @@ class LoveLetter implements GameInterface
             $this->status = 'Gewinner: ' . implode(', ', $victoriousPlayer);
             return true;
         }
-
         return false;
     }
 

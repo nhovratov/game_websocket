@@ -49,7 +49,8 @@ class PlayerState implements StateInterface
             'cards' => $this->cards,
             'openEffectCards' => $this->openEffectCards,
             'priestEffectVisibleCard' => $this->priestEffectVisibleCard,
-            'allowedAction' => $this->allowedAction
+            'allowedAction' => $this->allowedAction,
+            'wins' => $this->wins
         ];
     }
 
@@ -60,6 +61,11 @@ class PlayerState implements StateInterface
         $this->priestEffectVisibleCard = '';
         $this->allowedAction = '';
         $this->discardPile = [];
+    }
+
+    public function resetWins()
+    {
+        $this->wins = 0;
     }
 
     /**
@@ -170,9 +176,13 @@ class PlayerState implements StateInterface
         $this->discardCard($this->openEffectCards);
     }
 
+    /**
+     * @return int
+     */
     public function addWin()
     {
         $this->wins += 1;
+        return $this->wins;
     }
 
     /**
@@ -181,5 +191,13 @@ class PlayerState implements StateInterface
     public function getHandCard()
     {
         return array_slice($this->cards, 0, 1)[0];
+    }
+
+    /**
+     * @return int
+     */
+    public function getWins(): int
+    {
+        return $this->wins;
     }
 }
