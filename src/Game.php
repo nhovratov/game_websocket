@@ -109,7 +109,6 @@ class Game implements MessageComponentInterface
         if (isset($msg['name']) && $msg['name'] !== '') {
             echo "Name {$msg['name']} provided. Set name.\n";
             $player->setName($msg['name']);
-            $this->game->updateState();
         }
 
         if (isset($msg['action'])) {
@@ -136,6 +135,7 @@ class Game implements MessageComponentInterface
             $this->game->handleAction($params);
         }
         $this->update();
+        $this->game->updateState();
         echo "END ONMESSAGE";
     }
 
