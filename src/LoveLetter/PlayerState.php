@@ -26,7 +26,7 @@ class PlayerState implements StateInterface
     /**
      * @var string
      */
-    protected $priestEffectVisibleCard = '';
+    protected $effectVisibleCard = '';
 
     /**
      * @var string
@@ -48,7 +48,7 @@ class PlayerState implements StateInterface
         return [
             'cards' => $this->cards,
             'openEffectCards' => $this->openEffectCards,
-            'priestEffectVisibleCard' => $this->priestEffectVisibleCard,
+            'priestEffectVisibleCard' => $this->effectVisibleCard,
             'allowedAction' => $this->allowedAction,
             'wins' => $this->wins
         ];
@@ -58,7 +58,7 @@ class PlayerState implements StateInterface
     {
         $this->cards = [];
         $this->openEffectCards = [];
-        $this->priestEffectVisibleCard = '';
+        $this->effectVisibleCard = '';
         $this->allowedAction = '';
         $this->discardPile = [];
     }
@@ -116,17 +116,17 @@ class PlayerState implements StateInterface
     /**
      * @return string
      */
-    public function getPriestEffectVisibleCard(): string
+    public function getEffectVisibleCard(): string
     {
-        return $this->priestEffectVisibleCard;
+        return $this->effectVisibleCard;
     }
 
     /**
-     * @param string $priestEffectVisibleCard
+     * @param string $effectVisibleCard
      */
-    public function setPriestEffectVisibleCard(string $priestEffectVisibleCard)
+    public function setEffectVisibleCard(string $effectVisibleCard)
     {
-        $this->priestEffectVisibleCard = $priestEffectVisibleCard;
+        $this->effectVisibleCard = $effectVisibleCard;
     }
 
     /**

@@ -393,7 +393,7 @@ class LoveLetterTest extends TestCase
         $game->handleAction(['uid' => '123', 'id' => 2]);
         $this->assertEquals($game::FINISH_LOOKING_AT_CARD, $game->getWaitFor());
         $johnState = $john->getPlayerState();
-        $this->assertEquals(Priest::$name, $johnState->getPriestEffectVisibleCard());
+        $this->assertEquals(Priest::$name, $johnState->getEffectVisibleCard());
 
         // John finishes looking at Mikels cards and discards his card
         $game->handleAction(['uid' => '123']);

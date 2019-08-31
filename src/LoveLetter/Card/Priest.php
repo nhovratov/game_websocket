@@ -31,7 +31,7 @@ class Priest extends AbstractCard implements EffectInterface
             $activePlayerState = $game->getActivePlayerState();
             $selectedPlayerState = $selectedPlayer->getPlayerState();
             foreach ($selectedPlayerState->getCards() as $card) {
-                $activePlayerState->setPriestEffectVisibleCard($card['name']);
+                $activePlayerState->setEffectVisibleCard($card['name']);
             }
             $game->setWaitFor(LOVELETTER::FINISH_LOOKING_AT_CARD);
             $game->setStatus('Merke dir diese Karte von ' . $enemyName . ' und drücke auf ok!');
