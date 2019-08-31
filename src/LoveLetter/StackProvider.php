@@ -9,6 +9,7 @@ use NH\LoveLetter\Card\King;
 use NH\LoveLetter\Card\Maid;
 use NH\LoveLetter\Card\Priest;
 use NH\LoveLetter\Card\Prince;
+use NH\LoveLetter\Card\Princess;
 
 class StackProvider
 {
@@ -24,7 +25,7 @@ class StackProvider
         $this->insertCards($stack, Prince::getCard(), LoveLetter::PRINCECOUNT);
         $this->insertCards($stack, King::getCard(), LoveLetter::KINGCOUNT);
         $this->insertCards($stack, Countess::getCard(), LoveLetter::COUNTESSCOUNT);
-        $this->insertCards($stack, Prince::getCard(), LoveLetter::PRINCESSCOUNT);
+        $this->insertCards($stack, Princess::getCard(), LoveLetter::PRINCESSCOUNT);
         shuffle($stack);
         $this->counter = 1;
         return $stack;
