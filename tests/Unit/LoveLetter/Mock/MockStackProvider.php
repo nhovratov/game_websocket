@@ -99,6 +99,13 @@ class MockStackProvider extends StackProvider
         $this->insertCards($stack, King::getCard(), 1);
     }
 
+    protected function kingLooseStack(&$stack)
+    {
+        $this->insertCards($stack, King::getCard(), 5);
+        $this->insertCards($stack, Prince::getCard(), 1);
+        $this->insertCards($stack, King::getCard(), 1);
+    }
+
     protected function countessStack(&$stack)
     {
         $this->insertCards($stack, Prince::getCard(), 7);

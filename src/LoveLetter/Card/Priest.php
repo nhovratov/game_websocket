@@ -24,21 +24,15 @@ class Priest extends AbstractCard implements EffectInterface
             return;
         }
 
-        if ($game->getWaitFor() === LOVELETTER::CHOOSE_PLAYER) {
-            $playerId = $params['id'];
-            $selectedPlayer = $game->getPlayerById($playerId);
-            $enemyName = $selectedPlayer->getName();
-            $activePlayerState = $game->getActivePlayerState();
-            $selectedPlayerState = $selectedPlayer->getPlayerState();
-            foreach ($selectedPlayerState->getCards() as $card) {
-                $activePlayerState->setEffectVisibleCard($card['name']);
-            }
-            $game->setWaitFor(LOVELETTER::FINISH_LOOKING_AT_CARD);
-            $game->setStatus('Merke dir diese Karte von ' . $enemyName . ' und drücke auf ok!');
-            return;
+        $playerId = $params['id'];
+        $selectedPlayer = $game->getPlayerById($playerId);
+        $activePlayerState = $game->getActivePlayerState();
+        $selectedPlayerState = $selectedPlayer->getPlayerState();
+        foreach ($selectedPlayerState->getCards() as $card) {
+            $activePlayerState->setEffectVisibleCard($card);
         }
-
         $game->setWaitFor(LOVELETTER::CONFIRM_DISCARD_CARD);
         $game->setStatus($game->getActivePlayerName() . ' muss seine Karte auf den Ablagestapel legen ...');
+        return;
     }
 }

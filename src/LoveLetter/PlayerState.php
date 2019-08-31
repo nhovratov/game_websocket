@@ -24,9 +24,9 @@ class PlayerState implements StateInterface
     protected $openEffectCards = [];
 
     /**
-     * @var string
+     * @var array
      */
-    protected $effectVisibleCard = '';
+    protected $effectVisibleCard = [];
 
     /**
      * @var string
@@ -48,7 +48,7 @@ class PlayerState implements StateInterface
         return [
             'cards' => $this->cards,
             'openEffectCards' => $this->openEffectCards,
-            'priestEffectVisibleCard' => $this->effectVisibleCard,
+            'effectVisibleCard' => $this->effectVisibleCard,
             'allowedAction' => $this->allowedAction,
             'wins' => $this->wins
         ];
@@ -58,7 +58,7 @@ class PlayerState implements StateInterface
     {
         $this->cards = [];
         $this->openEffectCards = [];
-        $this->effectVisibleCard = '';
+        $this->effectVisibleCard = [];
         $this->allowedAction = '';
         $this->discardPile = [];
     }
@@ -114,9 +114,9 @@ class PlayerState implements StateInterface
     }
 
     /**
-     * @return string
+     * @return array
      */
-    public function getEffectVisibleCard(): string
+    public function getEffectVisibleCard(): array
     {
         return $this->effectVisibleCard;
     }
@@ -124,7 +124,7 @@ class PlayerState implements StateInterface
     /**
      * @param string $effectVisibleCard
      */
-    public function setEffectVisibleCard(string $effectVisibleCard)
+    public function setEffectVisibleCard(array $effectVisibleCard)
     {
         $this->effectVisibleCard = $effectVisibleCard;
     }
@@ -199,5 +199,10 @@ class PlayerState implements StateInterface
     public function getWins(): int
     {
         return $this->wins;
+    }
+
+    public function resetEffectVisibleCard()
+    {
+        $this->effectVisibleCard = [];
     }
 }
