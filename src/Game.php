@@ -113,7 +113,7 @@ class Game implements MessageComponentInterface
 
         if (isset($msg['action']) && $msg['action'] !== '') {
             $params = [];
-            if (isset($msg['params'])) {
+            if (isset($msg['params']) && is_array($msg['params'])) {
                 $params = $msg['params'];
             }
             $params['uid'] = $msg['id'];
