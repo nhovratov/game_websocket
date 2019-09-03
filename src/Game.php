@@ -111,13 +111,13 @@ class Game implements MessageComponentInterface
             $player->setName($msg['name']);
         }
 
-        if (isset($msg['action'])) {
+        if (isset($msg['action']) && $msg['action'] !== '') {
             $params = [];
             if (isset($msg['params'])) {
                 $params = $msg['params'];
             }
             $params['uid'] = $msg['id'];
-            if ($msg['action'] == 'start') {
+            if ($msg['action'] === 'start') {
                 if (!$player->isHost()) {
                     $this->removeClient($player);
                     $this->update();
