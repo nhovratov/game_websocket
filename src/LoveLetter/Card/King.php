@@ -10,7 +10,7 @@ use NH\LoveLetter\LoveLetter;
 class King extends AbstractCard implements EffectInterface
 {
     public static $id = 6;
-    public static $name = 'König';
+    public static $name = 'king';
     public static $value = 6;
     public static $text = 'Tausche deine Handkarte mit der eines Mitspielers.';
 

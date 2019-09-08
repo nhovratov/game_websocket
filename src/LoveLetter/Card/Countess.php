@@ -10,7 +10,7 @@ use NH\LoveLetter\LoveLetter;
 class Countess extends AbstractCard implements EffectInterface
 {
     public static $id = 7;
-    public static $name = 'Gräfin';
+    public static $name = 'countess';
     public static $value = 7;
     public static $text = 'Wenn du zusätzlich König oder Prinz auf der Hand hast, musst du die Gräfin ausspielen.';
 

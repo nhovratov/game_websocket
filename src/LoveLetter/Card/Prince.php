@@ -10,7 +10,7 @@ use NH\LoveLetter\LoveLetter;
 class Prince extends AbstractCard implements EffectInterface
 {
     public static $id = 5;
-    public static $name = 'Prinz';
+    public static $name = 'prince';
     public static $value = 5;
     public static $text = 'Wähle einen Spieler, der seine Handkarte ablegt und eine neue Karte zieht.';
 
@@ -28,7 +28,7 @@ class Prince extends AbstractCard implements EffectInterface
         $card = current($cards);
         $state->discardHandCard();
         $game->setStatus('Die Karte ' . $card['name'] . ' von ' . $chosenPlayer->getName() . ' wurde abgeworfen ');
-        if ($card['name'] === 'Prinzessin') {
+        if ($card['name'] === Princess::$name) {
             $game->addOutOfGamePlayer($chosenPlayer->getId());
             $game->setStatus($game->getStatus() . 'und ist deshalb ausgeschieden. ');
         } else {

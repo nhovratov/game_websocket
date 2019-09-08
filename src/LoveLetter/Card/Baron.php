@@ -10,7 +10,7 @@ use NH\LoveLetter\LoveLetter;
 class Baron extends AbstractCard implements EffectInterface
 {
     public static $id = 2;
-    public static $name = 'Baron';
+    public static $name = 'baron';
     public static $value = 2;
     public static $text = 'Vergleiche deine Handkarte mit der eines Mitspielers. Der Spieler mit dem niedrigeren Wert scheidet aus ...';
 

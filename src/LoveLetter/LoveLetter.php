@@ -58,20 +58,6 @@ class LoveLetter implements GameInterface
         4 => 3
     ];
 
-    const GUARDIAN_EFFECT_DEFAULT = [
-        'id' => 0,
-        'name' => '',
-        'selectableCards' => [
-            'Priester',
-            'Baron',
-            'Zofe',
-            'Prinz',
-            'König',
-            'Gräfin',
-            'Prinzessin'
-        ]
-    ];
-
     // Intern Game state only provided to public if necessary
 
     /**
@@ -664,7 +650,19 @@ class LoveLetter implements GameInterface
      */
     public function resetGuardianEffect()
     {
-        $this->guardianEffect = self::GUARDIAN_EFFECT_DEFAULT;
+        $this->guardianEffect = [
+            'id' => 0,
+            'name' => '',
+            'selectableCards' => [
+                Priest::$name,
+                Baron::$name,
+                Maid::$name,
+                Prince::$name,
+                King::$name,
+                Countess::$name,
+                Princess::$name
+            ]
+        ];
     }
 
     /**
