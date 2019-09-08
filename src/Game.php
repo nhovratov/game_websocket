@@ -26,7 +26,6 @@ class Game implements MessageComponentInterface
     {
         $this->players = new \SplObjectStorage();
         $this->game = new LoveLetter();
-        $this->globalState['status'] = 'Willkommen!';
     }
 
     /**
