@@ -43,8 +43,8 @@ class LoveLetter implements GameInterface
 
     const CARDS = [
         1 => Guardian::class,
-        2 => Baron::class,
-        3 => Priest::class,
+        2 => Priest::class,
+        3 => Baron::class,
         4 => Maid::class,
         5 => Prince::class,
         6 => King::class,
