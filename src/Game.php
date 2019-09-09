@@ -36,7 +36,6 @@ class Game implements MessageComponentInterface
     function onOpen(ConnectionInterface $conn)
     {
         // noop
-        echo "ONOPEN\n";
     }
 
     /**
@@ -46,7 +45,6 @@ class Game implements MessageComponentInterface
      */
     function onClose(ConnectionInterface $conn)
     {
-        echo "ONCLOSE\n";
         $this->removeClient($conn);
         $this->update();
     }
@@ -72,41 +70,27 @@ class Game implements MessageComponentInterface
      */
     function onMessage(ConnectionInterface $from, $msg)
     {
-        echo "START ONMESSAGE\n";
         $msg = json_decode($msg, true);
 
-        // User have to identify himself
         if (!isset($msg['id'])) {
             $this->removeClient($from);
             $this->update();
             return;
         }
 
-        // Client wants to identify
         if ($msg['id'] !== '') {
-            echo "Id {$msg['id']} provided.\n";
             $player = $this->getPlayerById($msg['id']);
-            // if id provided is invalid, create a new player
             if (!$player) {
-                echo "Id {$msg['id']} does not exist. Create new player.\n";
                 $player = $this->createNewPlayer($from);
-            // if player already exists, get him a new connection if needed
             } elseif (!$player->getClient()) {
-                echo "Id exists but no client is set. Set new client.\n";
                 $player = $this->getPlayerById($msg['id']);
                 $player->setClient($from);
-            } else {
-                // Everything is fine
-                echo "Id {$msg['id']} identified successfully.\n";
             }
-            // If player wants to connect without id, create new player
         } else {
-            echo "New connection established. Create player.\n";
             $player = $this->createNewPlayer($from);
         }
 
         if (isset($msg['name']) && $msg['name'] !== '') {
-            echo "Name {$msg['name']} provided. Set name.\n";
             $player->setName($msg['name']);
         }
 
@@ -135,7 +119,6 @@ class Game implements MessageComponentInterface
         }
         $this->update();
         $this->game->updateState();
-        echo "END ONMESSAGE";
     }
 
     protected function update()
@@ -145,7 +128,6 @@ class Game implements MessageComponentInterface
             if (!$player->getClient()) {
                 continue;
             }
-            echo "Send current state to {$player->getId()}\n";
             $player->getClient()->send(json_encode([
                 'global' => $this->globalState,
                 'local' => $player->getLocalState()
@@ -159,9 +141,7 @@ class Game implements MessageComponentInterface
         $sessionId = md5(time() . $this->secret . $id);
         $player = new Player($from, $id, $sessionId);
         $this->players->attach($player);
-        echo "SEND: New id " . $sessionId . " and id " . $id . "\n";
         if ($this->players->count() === 1) {
-            echo "Player is new host\n";
             $player->setIsHost(true);
             $this->globalState['hostid'] = $player->getId();
         }
