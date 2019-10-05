@@ -370,6 +370,74 @@ class LoveLetterTest extends TestCase
     /**
      * @test
      */
+    public function testMaidTie()
+    {
+        $players = new SplObjectStorage();
+        $this->mockStackProvider->setTestCase('maidTie');
+        $game = new LoveLetter($this->mockStackProvider);
+        $john = new Player(new Connection(), 1, '123');
+        $john->setName('John');
+        $john->setIsHost(true);
+        $players->attach($john);
+
+        $mikel = new Player(new Connection(), 2, '234');
+        $mikel->setName('Mikel');
+        $players->attach($mikel);
+
+        $game->handleAction(['uid' => '123', 'players' => $players]);
+
+        // John begins
+        $game->handleAction(['uid' => '123', 'id' => 1]);
+
+        // #1
+        // John chooses Maid card
+        $game->handleAction(['uid' => '123', 'key' => 7]);
+
+        // Next game
+        $game->handleAction(['uid' => '123']);
+        $state = $this->getGameState($john);
+        $this->assertFalse($state['gameFinished']);
+
+        // #2
+        // John chooses Maid card
+        $game->handleAction(['uid' => '123', 'key' => 7]);
+
+        // Next game
+        $game->handleAction(['uid' => '123']);
+        $state = $this->getGameState($john);
+        $this->assertFalse($state['gameFinished']);
+
+        // #3
+        // John chooses Maid card
+        $game->handleAction(['uid' => '123', 'key' => 7]);
+
+        // Next game
+        $game->handleAction(['uid' => '123']);
+        $state = $this->getGameState($john);
+        $this->assertFalse($state['gameFinished']);
+
+        // #4
+        // John chooses Maid card
+        $game->handleAction(['uid' => '123', 'key' => 7]);
+
+        // Next game
+        $game->handleAction(['uid' => '123']);
+        $state = $this->getGameState($john);
+        $this->assertFalse($state['gameFinished']);
+
+        // #5
+        // John chooses Maid card
+        $game->handleAction(['uid' => '123', 'key' => 7]);
+        $state = $this->getGameState($john);
+        $this->assertTrue($state['gameFinished']);
+        $this->assertEquals(5, $john->getPlayerState()->getWins());
+        $this->assertEquals(4, $mikel->getPlayerState()->getWins());
+        $this->assertCount(2, $state['winners']);
+    }
+
+    /**
+     * @test
+     */
     public function testPriest()
     {
         $players = new SplObjectStorage();

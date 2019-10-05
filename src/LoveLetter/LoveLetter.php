@@ -209,9 +209,11 @@ class LoveLetter implements GameInterface
             foreach ($this->winners as $winner) {
                 $player = $this->getPlayerById($winner);
                 $wins = $player->getPlayerState()->addWin();
-                /** TODO Handle multiple winners */
+                // If there are multiple winners, the youngest wins.
+                // This is hard to track. Hence, the first player wins the match.
                 if ($wins == self::PLAYER_WINS[count($this->players)]) {
                     $this->gameFinished = true;
+                    break;
                 }
             }
             // Prepare new game if someone has enough wins, else start new round
@@ -219,7 +221,7 @@ class LoveLetter implements GameInterface
                 $this->gameStarted = false;
                 $this->waitFor = self::START_NEW_GAME;
             } else {
-                // TODO Handle multiple winners
+                // Same rule here as above.
                 $this->activePlayer = $this->getPlayerById($this->winners[0]);
                 $this->waitFor = self::START_NEW_ROUND;
             }
@@ -441,7 +443,7 @@ class LoveLetter implements GameInterface
     protected function isRoundFinished()
     {
         // The only states, where the game can be determined as finished
-        if (!in_array($this->waitFor, [self::CHOOSE_PLAYER, self::CONFIRM_DISCARD_CARD])) {
+        if (!in_array($this->waitFor, [self::CHOOSE_PLAYER, self::CONFIRM_DISCARD_CARD, self::PLACE_MAID_CARD])) {
             return false;
         }
 

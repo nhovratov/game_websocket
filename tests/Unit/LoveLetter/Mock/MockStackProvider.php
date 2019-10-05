@@ -48,6 +48,11 @@ class MockStackProvider extends StackProvider
         $this->insertCards($stack, Maid::getCard(), 1);
     }
 
+    protected function maidTieStack(&$stack)
+    {
+        $this->insertCards($stack, Maid::getCard(), 7);
+    }
+
     protected function priestStack(&$stack)
     {
         $this->insertCards($stack, Priest::getCard(), 8);
