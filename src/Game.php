@@ -72,31 +72,46 @@ class Game implements MessageComponentInterface
     {
         $msg = json_decode($msg, true);
 
+        // Id must be sent with every request. If none is provided remove that client.
         if (!isset($msg['id'])) {
             $this->removeClient($from);
             $this->update();
             return;
         }
 
-        if ($msg['id'] !== '') {
-            $player = $this->getPlayerById($msg['id']);
-            if (!$player) {
-                $player = $this->createNewPlayer($from);
-            } elseif (!$player->getClient()) {
-                $player->setClient($from);
-                $this->game->updateState();
-            }
-        } else {
-            $player = $this->createNewPlayer($from);
+        // If the id is empty create a new player
+        if ($msg['id'] === '') {
+            $this->createNewPlayer($from);
+            $this->update();
+            return;
         }
 
-        if (isset($msg['name']) && $msg['name'] !== '') {
+        $player = $this->getPlayerById($msg['id']);
+
+        // Check if player exists. If not create a new player.
+        if (!$player) {
+            $this->createNewPlayer($from);
+            $this->update();
+            return;
+        }
+
+        // If player exists but has no client recover state.
+        if (!$player->getClient()) {
+            $player->setClient($from);
+            $this->update();
+            $this->game->updateState();
+            return;
+        }
+
+        // Player set his name.
+        if (isset($msg['name']) && $msg['name'] !== '' && ($player->getName() != $msg['name'])) {
             $player->setName($msg['name']);
             $this->update();
             $this->game->updateState();
             return;
         }
 
+        // Player performs some kind of action.
         if (isset($msg['action']) && $msg['action'] !== '') {
             $params = [];
             if (isset($msg['params']) && is_array($msg['params'])) {
@@ -104,6 +119,7 @@ class Game implements MessageComponentInterface
             }
             $params['uid'] = $msg['id'];
             if ($msg['action'] === 'start') {
+                // Some player who is not a host tried to start the game. This is not allowed.
                 if (!$player->isHost()) {
                     $this->removeClient($player);
                     $this->update();
@@ -120,8 +136,6 @@ class Game implements MessageComponentInterface
             }
             $this->game->handleAction($params);
         }
-
-        $this->update();
     }
 
     protected function update()
