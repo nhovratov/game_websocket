@@ -83,7 +83,6 @@ class Game implements MessageComponentInterface
             if (!$player) {
                 $player = $this->createNewPlayer($from);
             } elseif (!$player->getClient()) {
-                $player = $this->getPlayerById($msg['id']);
                 $player->setClient($from);
             }
         } else {
