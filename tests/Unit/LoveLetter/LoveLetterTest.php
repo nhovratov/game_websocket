@@ -81,7 +81,6 @@ class LoveLetterTest extends TestCase
     {
         $players = new SplObjectStorage();
         $game = new LoveLetter($this->mockStackProvider);
-        $game->updateState();
         $player1 = new Player(new Connection(), 1, '123');
         $player1->setIsHost(true);
         $players->attach($player1);
