@@ -84,6 +84,7 @@ class Game implements MessageComponentInterface
                 $player = $this->createNewPlayer($from);
             } elseif (!$player->getClient()) {
                 $player->setClient($from);
+                $this->game->updateState();
             }
         } else {
             $player = $this->createNewPlayer($from);
@@ -91,6 +92,9 @@ class Game implements MessageComponentInterface
 
         if (isset($msg['name']) && $msg['name'] !== '') {
             $player->setName($msg['name']);
+            $this->update();
+            $this->game->updateState();
+            return;
         }
 
         if (isset($msg['action']) && $msg['action'] !== '') {
@@ -116,8 +120,8 @@ class Game implements MessageComponentInterface
             }
             $this->game->handleAction($params);
         }
+
         $this->update();
-        $this->game->updateState();
     }
 
     protected function update()
