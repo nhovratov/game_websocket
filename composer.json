@@ -7,7 +7,6 @@
   "require": {
     "cboden/ratchet": "^0.4.1",
     "phpunit/phpunit": "^8",
-    "ext-json": "*",
-    "ext-memcached": "*"
+    "ext-json": "*"
   }
 }
